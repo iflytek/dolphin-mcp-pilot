@@ -121,9 +121,7 @@ def _resolve_resource_id(full_name: str, resource_type: str = "FILE") -> int:
     return res.get("id")
 
 
-def _resolve_pid_from_current_dir(
-    current_dir: str, resource_type: str = "FILE"
-) -> int:
+def _resolve_pid_from_current_dir(current_dir: str, resource_type: str = "FILE") -> int:
     """Resolve parent directory path to pid. Returns -1 for root."""
     cd = (current_dir or "").strip("/")
     if not cd:
@@ -230,9 +228,7 @@ def register_resource_tools(mcp: FastMCP):
         return result.get("data", {})
 
     @mcp.tool()
-    def ds_get_resource_by_name(
-        full_name: str, resource_type: str = "FILE"
-    ) -> dict:
+    def ds_get_resource_by_name(full_name: str, resource_type: str = "FILE") -> dict:
         """Find a resource (file or folder) by full path, returning id and metadata.
 
         Implementation: uses /resources/list recursive search
@@ -545,9 +541,7 @@ def register_resource_tools(mcp: FastMCP):
                             break
 
                 if node:
-                    is_dir = bool(node.get("directory")) or bool(
-                        node.get("dirctory")
-                    )
+                    is_dir = bool(node.get("directory")) or bool(node.get("dirctory"))
                     if is_dir:
 
                         def _collect_children(n):

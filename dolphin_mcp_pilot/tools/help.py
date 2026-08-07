@@ -375,7 +375,11 @@ def register_help_tools(mcp: FastMCP):
             "user": {
                 "name": "User/Tenant Management",
                 "tools": [
-                    {"name": "ds_list_users", "desc": "List users", "risk": "read-only"},
+                    {
+                        "name": "ds_list_users",
+                        "desc": "List users",
+                        "risk": "read-only",
+                    },
                     {
                         "name": "ds_list_tenants",
                         "desc": "List tenants",

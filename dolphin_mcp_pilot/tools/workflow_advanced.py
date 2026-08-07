@@ -981,7 +981,9 @@ def register_workflow_advanced_tools(mcp: FastMCP):
                 if connect_to:
                     post_code = name_to_code.get(connect_to)
                     if post_code is None:
-                        raise ValueError(f"connect_to references a nonexistent task: {connect_to}")
+                        raise ValueError(
+                            f"connect_to references a nonexistent task: {connect_to}"
+                        )
                     relations.append(
                         {
                             "name": "",
@@ -1245,7 +1247,9 @@ def register_workflow_advanced_tools(mcp: FastMCP):
                 new_x = op.get("x")
                 new_y = op.get("y")
                 if new_x is None or new_y is None:
-                    raise ValueError("update_location requires both x and y coordinates")
+                    raise ValueError(
+                        "update_location requires both x and y coordinates"
+                    )
 
                 # Find and update the corresponding location
                 found = False
@@ -1392,10 +1396,14 @@ def register_workflow_advanced_tools(mcp: FastMCP):
                                         f"{online_sch.get('msg')}. Call ds_online_schedule manually"
                                     )
                             else:
-                                schedule_action = f"Schedule already ONLINE (schedule_id={sid})"
+                                schedule_action = (
+                                    f"Schedule already ONLINE (schedule_id={sid})"
+                                )
                             break
                 if not schedule_action:
-                    schedule_action = "Workflow has no associated schedule; no restore needed"
+                    schedule_action = (
+                        "Workflow has no associated schedule; no restore needed"
+                    )
             except Exception as e:
                 schedule_action = f"Schedule restore exception: {str(e)[:100]}"
 

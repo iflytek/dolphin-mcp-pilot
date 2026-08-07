@@ -90,10 +90,24 @@ jobs:
           fi
           echo "No hardcoded secrets found."
 
+  notices:
+    name: NOTICE and THIRD_PARTY_LICENSES validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate compliance files
+        run: python3 scripts/validate_notices.py
+
   build:
     name: Package build
     runs-on: ubuntu-latest
-    needs: [test, lint, security]
+    needs: [test, lint, security, notices]
 
     steps:
       - uses: actions/checkout@v4
