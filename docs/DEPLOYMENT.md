@@ -1,10 +1,10 @@
 # 🚀 Deployment Guide
 
-Quick deployment guide for **dolphin-mcp-pilot**.
+Production and development deployment guide for **dolphin-mcp-pilot**.
 
 ## 📋 Prerequisites
 
-- **Docker** 20.10+ and **Docker Compose** 1.29+
+- **Docker** 20.10+ and **Docker Compose** v2 (the `docker compose` command)
 - Access to a running **DolphinScheduler** instance (3.x recommended)
 - DolphinScheduler API token or username/password
 
@@ -13,44 +13,82 @@ Quick deployment guide for **dolphin-mcp-pilot**.
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-org/dolphin-mcp-pilot.git
+git clone https://github.com/iflytek/dolphin-mcp-pilot.git
 cd dolphin-mcp-pilot
 ```
 
 ### 2. Configure environment
 
 ```bash
-# Copy the example config
 cp .env.example .env
-
-# Edit .env with your favorite editor
-nano .env  # or vim, code, notepad, etc.
+# Edit .env — at minimum set DS_URL and DS_TOKEN (or DS_USER/DS_PASSWORD)
 ```
 
-**Required configuration:**
-- `DS_URL`: Your DolphinScheduler API URL
-- `DS_TOKEN`: Your API token (recommended)
-  - OR `DS_USER` + `DS_PASSWORD` (fallback)
+See [Configuration](CONFIGURATION.md) for the full environment variable reference.
 
 ### 3. Start the service
 
-**Linux/Mac:**
+**Development mode** (recommended — builds locally):
 ```bash
-chmod +x start.sh
-./start.sh
+docker compose --profile dev up -d dolphin-mcp-pilot-dev
 ```
 
-**Windows:**
-```cmd
-start.bat
-```
-
-**Or manually:**
+**Production mode** (pulls from ghcr.io — requires a release tag to be available):
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ✅ Service will be available at `http://localhost:8001/mcp/` (note the trailing slash)
+
+## 🐳 Docker Compose Reference
+
+The [`docker-compose.yml`](../docker-compose.yml) provides two services that share configuration via YAML anchors (`x-common`):
+
+### Development mode (`--profile dev`)
+
+Builds from the local Dockerfile and mounts `./dolphin_mcp_pilot` as read-only. Source changes require a container restart (uvicorn is not started with `--reload`).
+
+```bash
+docker compose --profile dev up -d dolphin-mcp-pilot-dev
+docker compose --profile dev ps        # STATUS should show (healthy) after ~10s
+docker compose --profile dev logs -f   # watch startup logs
+```
+
+### Production mode (default)
+
+Pulls the published multi-arch image from `ghcr.io/iflytek/dolphin-mcp-pilot:${IMAGE_TAG:-latest}`.
+
+> **Note**: The `latest` tag is only created when a stable release tag (e.g. `v0.2.0`) is pushed. Until the first release is tagged, use dev mode.
+
+```bash
+# Optional: pin to a specific version
+echo "IMAGE_TAG=0.2.0" >> .env
+
+docker compose up -d
+docker compose ps        # STATUS should show (healthy)
+```
+
+### Port convention
+
+The container always listens on **8001** internally (matching the Dockerfile `HEALTHCHECK`). The `MCP_PORT` variable in `.env` controls only the **host-side** port mapping:
+
+```bash
+# .env
+MCP_PORT=9000    # host:9000 → container:8001
+```
+
+The compose file's `environment:` block explicitly sets `MCP_PORT: "8001"` inside the container to prevent the host-side value from leaking in.
+
+### Built-in configuration
+
+The default `docker-compose.yml` already includes:
+
+- **Healthcheck**: stdlib socket probe on `127.0.0.1:8001` (30s interval, 5s timeout, 10s start period, 3 retries)
+- **Log rotation**: `json-file` driver, `max-size: 10m`, `max-file: 3`
+- **Resource limits**: `cpus: 1.0 / memory: 512M` limits, `0.25 / 128M` reservations
+- **Non-root runtime**: `uid=1001 gid=1001`
+
+All values are tunable via `.env` variables (`LOG_MAX_SIZE`, `CPU_LIMIT`, `MEMORY_LIMIT`, etc.). See [Configuration](CONFIGURATION.md) for the full list.
 
 ## 🔍 Verify Deployment
 
@@ -66,19 +104,18 @@ curl -X POST http://localhost:8001/mcp/ \
 
 Expected: an SSE `data:` line containing `"serverInfo":{"name":"DolphinScheduler",...}`
 
-> **Note**: URL must end with `/`. Without it, Starlette returns HTTP 307 redirect,
-> which some MCP clients fail to follow.
+> **Note**: URL must end with `/`. Without it, Starlette returns HTTP 307 redirect, which some MCP clients fail to follow.
 
 ### View logs
 
 ```bash
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ### Check container status
 
 ```bash
-docker ps | grep dolphin-mcp-pilot
+docker compose ps
 ```
 
 ## 🔧 Configuration Details
@@ -94,7 +131,7 @@ docker ps | grep dolphin-mcp-pilot
 | `DS_TENANT_CODE` | ❌ No | `default` | Tenant code for workflow creation |
 | `DS_MCP_TRANSPORT` | ❌ No | `http` | Transport mode: `stdio` or `http` |
 | `MCP_HOST` | ❌ No | `0.0.0.0` | HTTP server bind address |
-| `MCP_PORT` | ❌ No | `8001` | HTTP server port |
+| `MCP_PORT` | ❌ No | `8001` | Host-side port (container always uses 8001) |
 
 ### Getting DolphinScheduler API Token
 
@@ -106,25 +143,7 @@ docker ps | grep dolphin-mcp-pilot
 
 ## 🔌 Client Configuration
 
-### CodeBuddy / Claude Desktop (HTTP mode)
-
-Add to your MCP client config:
-
-```json
-{
-  "mcpServers": {
-    "dolphinscheduler": {
-      "type": "sse",
-      "url": "http://localhost:8001/mcp/",
-      "headers": {
-        "X-DS-Token": "your_api_token_here"
-      }
-    }
-  }
-}
-```
-
-See `examples/` directory for more configuration samples.
+See [Client Configuration](CLIENT_CONFIG.md) for MCP client setup (CodeBuddy, Claude Desktop, etc.) and multi-tenant per-request auth.
 
 ## 🐛 Troubleshooting
 
@@ -132,7 +151,7 @@ See `examples/` directory for more configuration samples.
 
 **Check logs:**
 ```bash
-docker-compose logs
+docker compose logs
 ```
 
 **Common issues:**
@@ -171,14 +190,22 @@ curl http://your-ds-host:12345/dolphinscheduler/ui
 - User/token must have appropriate project permissions
 - Some operations require admin privileges
 
+### Healthcheck failing
+
+- Container port is always 8001 internally — verify nothing else overrides `MCP_PORT` inside the container
+- Check `docker compose ps` for health status details
+- If the app hasn't started yet, wait for the `start_period` (10s)
+
 ## 🔄 Updates
 
 ### Pull latest changes
 
 ```bash
 git pull origin main
-docker-compose down
-docker-compose up -d --build
+docker compose down
+docker compose --profile dev up -d --build   # dev mode
+# or
+docker compose pull && docker compose up -d  # prod mode
 ```
 
 ### View changelog
@@ -190,24 +217,24 @@ git log --oneline
 ## 🛑 Stop Service
 
 ```bash
-docker-compose down
+docker compose down
+docker compose --profile dev down   # also stop dev service
 ```
 
 To remove volumes as well:
 ```bash
-docker-compose down -v
+docker compose down -v
 ```
 
 ## 📦 Production Deployment
 
-### Use Docker image from registry
+### Use published Docker image
 
 ```yaml
-# docker-compose.yml
 services:
   dolphin-mcp-pilot:
-    image: your-registry/dolphin-mcp-pilot:latest
-    # ... rest of config
+    image: ghcr.io/iflytek/dolphin-mcp-pilot:latest
+    # See docker-compose.yml for full production config
 ```
 
 ### Enable HTTPS
@@ -218,10 +245,10 @@ Use a reverse proxy (nginx, Caddy, Traefik) in front of the service:
 server {
     listen 443 ssl;
     server_name mcp.yourdomain.com;
-    
+
     ssl_certificate /path/to/cert.pem;
     ssl_certificate_key /path/to/key.pem;
-    
+
     location /mcp {
         proxy_pass http://localhost:8001;
         proxy_http_version 1.1;
@@ -232,44 +259,16 @@ server {
 }
 ```
 
-### Resource limits
-
-Add to `docker-compose.yml`:
-
-```yaml
-services:
-  dolphin-mcp-pilot:
-    # ... existing config
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
-```
-
-### Health checks
-
-```yaml
-services:
-  dolphin-mcp-pilot:
-    # ... existing config
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/mcp/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-```
-
 ## 📞 Support
 
-- **Issues**: https://github.com/your-org/dolphin-mcp-pilot/issues
-- **Discussions**: https://github.com/your-org/dolphin-mcp-pilot/discussions
+- **Issues**: https://github.com/iflytek/dolphin-mcp-pilot/issues
+- **Discussions**: https://github.com/iflytek/dolphin-mcp-pilot/discussions
 - **DolphinScheduler Docs**: https://dolphinscheduler.apache.org/
 
 ## 📄 License
 
 Apache-2.0
+
+---
+
+← Back to [README](../README.md) | [Installation](INSTALLATION.md) | [Configuration](CONFIGURATION.md)

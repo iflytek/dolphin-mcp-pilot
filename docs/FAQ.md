@@ -14,7 +14,7 @@ dolphin-mcp-pilot 使用过程中的常见问题与解决方案。
 - DolphinScheduler 服务未启动
 
 **解决**：
-1. 检查 `.env` 中的 `DS_BASE_URL` 是否正确（格式：`http://host:port/dolphinscheduler`）
+1. 检查 `.env` 中的 `DS_URL` 是否正确（格式：`http://host:port/dolphinscheduler`）
 2. 在服务器上 `curl http://your-ds-host:12345/dolphinscheduler/ui/` 确认可访问
 3. 检查防火墙规则：`sudo firewall-cmd --list-ports`
 4. Docker 部署时确认网络模式（`--network host` 或桥接网络）
@@ -48,7 +48,7 @@ dolphin-mcp-pilot 使用过程中的常见问题与解决方案。
       "command": "uvx",
       "args": ["--from", "dolphin-mcp-pilot", "dolphin-mcp-pilot"],
       "env": {
-        "DS_BASE_URL": "http://your-ds-host:12345/dolphinscheduler",
+        "DS_URL": "http://your-ds-host:12345/dolphinscheduler",
         "DS_USER": "admin",
         "DS_PASSWORD": "your-password"
       }
@@ -71,7 +71,7 @@ dolphin-mcp-pilot 使用过程中的常见问题与解决方案。
 ```
 
 **Cursor / Windsurf**（SSE 模式）：
-启动 HTTP 服务器，配置 `http://localhost:8080/sse` 作为 MCP endpoint。
+启动 HTTP 服务器，配置 `http://localhost:8001/mcp/` 作为 MCP endpoint。
 
 ---
 
@@ -387,7 +387,7 @@ for start in ["2024-01-01", "2024-01-21", "2024-02-11", ...]:
 | v0.2.0            | 2.x / 3.x        | 3.10+  |
 | v0.1.0            | 2.x              | 3.10+  |
 
-**注意**：DolphinScheduler 3.x 的 API 路径可能有变化，需要调整 `DS_BASE_URL`。
+**注意**：DolphinScheduler 3.x 的 API 路径可能有变化，需要调整 `DS_URL`。
 
 ---
 

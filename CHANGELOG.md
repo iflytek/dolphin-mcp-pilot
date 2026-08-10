@@ -42,6 +42,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`.env.example`** extended with Compose-tunable variables: `IMAGE_TAG`, `LOG_MAX_SIZE`, `LOG_MAX_FILE`, `CPU_LIMIT`, `MEMORY_LIMIT`, `CPU_RESERVATION`, `MEMORY_RESERVATION`
 - **`README.md` / `README.zh-CN.md`** Option A rewritten as a Docker Compose quickstart (prepare `.env` → `docker compose up` → verify `healthy`); dev mode documented alongside
 
+### Documentation overhaul (issue #13)
+
+- **`README.md`**: 384 → 93 lines — slim OSS landing-page structure (Why / Features / Quick Start / Documentation table / What's new / Contributing / License)
+- **`README.zh-CN.md`**: 386 → 90 lines — full Chinese translation (was ~95% English); matches English README structure with centered badges + CI badge
+- **4 new `docs/` files** (content extracted from README):
+  - `docs/FEATURES.md` — feature comparison vs `ocean-zhc/dolphinscheduler-mcp` + tool categories
+  - `docs/INSTALLATION.md` — install options (Docker/source/package), run modes, packaging
+  - `docs/CONFIGURATION.md` — environment variables, auth options, Compose tunables
+  - `docs/CLIENT_CONFIG.md` — MCP client setup (CodeBuddy, Claude Desktop, etc.), multi-tenant auth
+- **`docs/DEPLOYMENT.md`** rewritten to reflect PR #12 compose setup (dev profile, resource limits, healthcheck, MCP_PORT host-only convention)
+- **13 bug fixes**: 6 broken links (`DEPLOYMENT.md` → `docs/DEPLOYMENT.md`), 3 `your-org` → `iflytek` placeholders, 1 `your-registry/` → `ghcr.io/iflytek/`, 3 `DS_BASE_URL` → `DS_URL` in FAQ, 1 port `8080` → `8001` in FAQ, 14 `docker-compose` v1 CLI → `docker compose` v2
+- **LICENSE**: replaced stub with full Apache-2.0 text (copyright iFlytek Co., Ltd.)
+- **`docs/PROPOSAL.md`**: added "internal governance document" note
+
 ---
 
 ## [0.2.0] - 2026-07-29

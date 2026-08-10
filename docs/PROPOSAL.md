@@ -1,3 +1,5 @@
+> **Note**: This is an internal governance document (repository proposal for the iflytek open-source community). It is not user-facing documentation.
+
 # Repository Proposal: dolphin-mcp-pilot
 
 **Target Repository Name**: dolphin-mcp-pilot  
