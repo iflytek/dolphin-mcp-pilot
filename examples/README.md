@@ -1,173 +1,128 @@
-# Configuration Examples
+# Dolphin MCP Pilot Examples
 
-This directory contains example configurations for various MCP clients.
+A community-contributed gallery of reusable **dolphin-mcp-pilot client configurations**. Each
+community example is documented, validated, and ready to adapt for a supported MCP client or
+deployment mode.
 
-## 📁 Files
+> **Built-in configurations vs. community examples** — the JSON files at the root of this
+> directory are maintained by the project. New community contributions use one self-contained
+> directory per example so their requirements, testing notes, and authorship stay with the config.
 
-### `codebuddy-config.json`
-Configuration for **CodeBuddy** IDE with HTTP mode and token authentication.
+[中文贡献指南见下方](#中文)
 
-**Usage:**
-1. Copy the content to your CodeBuddy MCP settings
-2. Replace `your_api_token_here` with your actual DolphinScheduler API token
-3. Adjust the URL if your service is not on localhost
+## Included configurations
 
-### `claude-desktop-config.json`
-Configuration for **Claude Desktop** using stdio mode with Docker.
+- [`codebuddy-config.json`](codebuddy-config.json) — CodeBuddy over HTTP with token authentication.
+- [`claude-desktop-config.json`](claude-desktop-config.json) — Claude Desktop over stdio with Docker.
+- [`http-auth-token.json`](http-auth-token.json) — HTTP transport with a DolphinScheduler API token.
+- [`http-auth-password.json`](http-auth-password.json) — HTTP transport with username/password authentication.
 
-**Usage:**
-1. Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (Mac)
-   or `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
-2. Update `/path/to/your/.env` to your actual `.env` file path
-3. Restart Claude Desktop
+Replace every `your_*` or `YOUR_*` placeholder before using a configuration. For HTTP examples,
+also update the server URL and keep the trailing `/` in `/mcp/`. See the
+[deployment guide](../docs/DEPLOYMENT.md) for server setup and HTTPS guidance.
 
-### `http-auth-token.json`
-HTTP mode with API token authentication (recommended).
+## What a community example contains
 
-**Best for:**
-- Production deployments
-- Multi-tenant scenarios
-- Long-running services
+Use a short, unique kebab-case id for the directory:
 
-### `http-auth-password.json`
-HTTP mode with username/password authentication (fallback).
-
-**Best for:**
-- Development/testing
-- When API tokens are not available
-- Legacy DolphinScheduler versions
-
-## 🔐 Authentication Methods
-
-### Method 1: API Token (Recommended)
-
-**Pros:**
-- More secure (can be revoked without changing password)
-- Better for automation
-- Native DolphinScheduler 3.x feature
-
-**How to get token:**
-1. Log in to DolphinScheduler Web UI
-2. Go to **User Center** → **Token Management**
-3. Click **Create Token**
-4. Set expiration and generate
-5. Copy the token
-
-**Config:**
-```json
-{
-  "headers": {
-    "X-DS-Token": "your_token_here"
-  }
-}
+```text
+examples/
+├── README.md                  # this file — format and contribution guide
+├── TEMPLATE/                  # copy this to start a contribution
+│   ├── README.md              # metadata plus setup and testing notes
+│   └── config.json            # sanitized MCP client configuration
+├── scripts/
+│   └── lint.py                # dependency-free validation
+└── <example-id>/
+    ├── README.md              # required — metadata and instructions
+    ├── config.json            # required — valid, sanitized JSON
+    └── preview.png            # optional — screenshot of the working client
 ```
 
-### Method 2: Username/Password
+- **`config.json`** must be a complete MCP client configuration with a non-empty `mcpServers`
+  object. Replace credentials, private hosts, and personal paths with obvious placeholders.
+- **`README.md`** contains YAML frontmatter for automated validation followed by setup, test, and
+  compatibility notes.
+- **`preview.png`** is optional, but useful when the client has a visual MCP configuration screen.
 
-**Pros:**
-- Works with all DolphinScheduler versions
-- No token management needed
+## Metadata (README frontmatter)
 
-**Cons:**
-- Less secure
-- Session-based (cached internally)
-
-**Config:**
-```json
-{
-  "headers": {
-    "X-DS-User": "your_username",
-    "X-DS-Password": "your_password"
-  }
-}
+```yaml
+---
+id: my-client-example                 # unique, kebab-case, matches the directory name
+title: My MCP Client Example          # display name
+description: One-sentence summary of the configuration.
+client: claude-desktop                # client name; use other for an unlisted client
+transport: http                       # http | stdio
+authentication: token                 # token | password | none | other
+author: your-github-handle            # contributor's GitHub username
+testedWith: dolphin-mcp-pilot 0.2.0   # version or commit used for validation
+sourceUrl: ''                         # optional blog post, video, or discussion
+---
 ```
 
-## 🌐 Transport Modes
+The body should explain prerequisites, where to place the configuration, which placeholders to
+replace, how the example was tested, and any known limitations.
 
-### HTTP Mode (Recommended for remote access)
+## How to contribute
 
-**Pros:**
-- Multi-tenant support (per-request auth)
-- Can be accessed remotely
-- Better for production
+1. **Copy the template:** `cp -r examples/TEMPLATE examples/<your-example-id>`
+2. **Add your configuration:** replace `config.json` with the tested client configuration.
+3. **Fill the metadata and instructions:** update `README.md`, including the exact version tested.
+4. **Scrub secrets:** remove tokens, passwords, private hosts, internal IPs, and personal paths.
+5. **Run the validator:** `python examples/scripts/lint.py`
+6. **Open a pull request against `main`:**
 
-**Setup:**
-```bash
-DS_MCP_TRANSPORT=http docker-compose up -d
-```
+   ```bash
+   git checkout -b examples/<your-example-id>
+   git add examples/<your-example-id>
+   git commit -s -m 'examples: add <your-example-id>'
+   git push origin examples/<your-example-id>
+   ```
 
-**Client config:**
-```json
-{
-  "type": "sse",
-  "url": "http://your-server:8001/mcp/"
-}
-```
+The `-s` flag adds the DCO sign-off required for contributions.
 
-### stdio Mode (For local tools)
+### Quality bar
 
-**Pros:**
-- Direct process communication
-- Lower latency
-- Simpler for single-user scenarios
+An example is ready to merge when it:
 
-**Setup:**
-```bash
-python -m dolphin_mcp_pilot
-```
+- Uses a unique kebab-case `id` that matches its directory name.
+- Contains valid JSON with a non-empty `mcpServers` object.
+- Has been tested with the stated dolphin-mcp-pilot version or commit.
+- Contains no live credentials, private/internal endpoints, or user-specific filesystem paths.
+- Clearly explains setup, placeholders, verification steps, and external requirements.
+- Passes `python examples/scripts/lint.py` and the repository CI checks.
 
-**Client config:**
-```json
-{
-  "command": "python",
-  "args": ["-m", "dolphin_mcp_pilot"]
-}
-```
+---
 
-## 🔧 Customization
+<a id='中文'></a>
 
-### Change port
+## 中文
 
-In `.env`:
-```bash
-MCP_PORT=9000
-```
+这里是社区共建的 **dolphin-mcp-pilot 客户端配置示例库**。目录根部的 JSON 文件由项目维护；
+新的社区示例采用“一示例一目录”，以便同时保存配置、说明、测试版本和作者信息。
 
-Update client config:
-```json
-{
-  "url": "http://localhost:9000/mcp/"
-}
-```
+### 目录规范
 
-### Remote deployment
+复制 `examples/TEMPLATE` 为 `examples/<示例-id>`。示例 id 使用小写短横线格式，并包含：
 
-In `.env`:
-```bash
-MCP_HOST=0.0.0.0  # Allow external access
-```
+- **`config.json`（必需）**：完整、可解析且已清理敏感信息的 MCP 客户端配置。
+- **`README.md`（必需）**：保留模板中的 YAML frontmatter，并写明安装、占位符和验证步骤。
+- **`preview.png`（可选）**：客户端配置界面或运行结果截图。
 
-Update client config:
-```json
-{
-  "url": "http://your-server-ip:8001/mcp/"
-}
-```
+### 如何贡献
 
-### HTTPS (with reverse proxy)
+1. 复制模板：`cp -r examples/TEMPLATE examples/<示例-id>`
+2. 替换并验证 `config.json`
+3. 填写 `README.md` 元数据、安装方法和实际测试版本
+4. **清理密钥和隐私信息**：token、密码、内部 IP、私有域名及个人路径必须改为占位符
+5. 运行：`python examples/scripts/lint.py`
+6. 向 `main` 提交 PR，commit 使用 `-s` 添加 DCO 签名
 
-Use nginx/Caddy/Traefik in front:
+### 合并门槛
 
-```json
-{
-  "url": "https://mcp.yourdomain.com/mcp/"
-}
-```
-
-See [DEPLOYMENT.md](../DEPLOYMENT.md#enable-https) for details.
-
-## 📚 More Information
-
-- [Main README](../README.md)
-- [Deployment Guide](../DEPLOYMENT.md)
-- [DolphinScheduler Documentation](https://dolphinscheduler.apache.org/)
+- id 唯一、使用小写短横线格式，并与目录名一致
+- JSON 有效且包含非空的 `mcpServers`
+- 已在注明的 dolphin-mcp-pilot 版本或 commit 上测试
+- 不含真实凭据、内部地址或个人文件路径
+- 说明清晰，并通过 examples lint 与仓库 CI

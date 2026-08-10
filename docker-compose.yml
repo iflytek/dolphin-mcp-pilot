@@ -1,13 +1,91 @@
+# docker-compose.yml — production-ready reference for dolphin-mcp-pilot
+#
+# Quick start:
+#   cp .env.example .env        # edit with your DolphinScheduler credentials
+#   docker compose up -d
+#
+# Development (local Dockerfile + read-only source mount):
+#   docker compose down
+#   docker compose --profile dev up -d dolphin-mcp-pilot-dev
+#
+# The prod service (dolphin-mcp-pilot) pulls from ghcr.io by default.
+# The dev service (dolphin-mcp-pilot-dev) builds from source and mounts
+# ./dolphin_mcp_pilot read-only. Source changes require a container restart
+# (uvicorn is not started with --reload). They share config via YAML
+# anchors (x-common).
+#
+# Port convention: the container always listens on 8001 internally (matching
+# the Dockerfile HEALTHCHECK). The MCP_PORT variable controls the host-side
+# port mapping only.
+
+# ---------------------------------------------------------------------------
+# Shared config (YAML anchors)
+# ---------------------------------------------------------------------------
+x-common: &common
+  restart: unless-stopped
+  env_file:
+    - .env
+  environment: &common-env
+    DS_MCP_TRANSPORT: "${DS_MCP_TRANSPORT:-http}"
+    MCP_HOST: "0.0.0.0"
+    # Container port intentionally fixed at 8001 — the Dockerfile HEALTHCHECK
+    # probes 127.0.0.1:8001 and the prod image exposes 8001. This value
+    # overrides MCP_PORT from env_file so user-customizable host port mapping
+    # does not leak into the container.
+    MCP_PORT: "8001"
+  healthcheck: &common-health
+    # Matches the Dockerfile HEALTHCHECK — stdlib socket probe, no extra deps.
+    test:
+      [
+        "CMD",
+        "python",
+        "-c",
+        "import socket; s=socket.socket(); s.settimeout(2); s.connect(('127.0.0.1', 8001)); s.close()",
+      ]
+    interval: 30s
+    timeout: 5s
+    start_period: 10s
+    retries: 3
+  logging: &common-logging
+    driver: json-file
+    options:
+      max-size: "${LOG_MAX_SIZE:-10m}"
+      max-file: "${LOG_MAX_FILE:-3}"
+  deploy: &common-deploy
+    resources:
+      limits:
+        cpus: "${CPU_LIMIT:-1.0}"
+        memory: "${MEMORY_LIMIT:-512M}"
+      reservations:
+        cpus: "${CPU_RESERVATION:-0.25}"
+        memory: "${MEMORY_RESERVATION:-128M}"
+
+# ---------------------------------------------------------------------------
+# Services
+# ---------------------------------------------------------------------------
 services:
+  # Production: uses the published multi-arch image from ghcr.io.
+  # Runs by default with `docker compose up`.
   dolphin-mcp-pilot:
-    build: .
+    <<: *common
     container_name: dolphin-mcp-pilot
-    restart: unless-stopped
+    image: ghcr.io/iflytek/dolphin-mcp-pilot:${IMAGE_TAG:-latest}
+    # Host port is configurable via MCP_PORT; container port is fixed at 8001.
     ports:
-      - "8001:8001"
-    env_file:
-      - .env
-    environment:
-      DS_MCP_TRANSPORT: "http"
-      MCP_HOST: "0.0.0.0"
-      MCP_PORT: "8001"
+      - "${MCP_PORT:-8001}:8001"
+
+  # Development: builds from local Dockerfile, mounts source read-only.
+  # Activate with `docker compose --profile dev up -d dolphin-mcp-pilot-dev`.
+  # Source changes require a container restart (uvicorn has no --reload).
+  dolphin-mcp-pilot-dev:
+    <<: *common
+    container_name: dolphin-mcp-pilot-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${MCP_PORT:-8001}:8001"
+    volumes:
+      - ./dolphin_mcp_pilot:/app/dolphin_mcp_pilot:ro
+    profiles:
+      - dev

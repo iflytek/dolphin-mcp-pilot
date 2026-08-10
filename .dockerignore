@@ -1,9 +1,41 @@
-__pycache__/
-*.py[cod]
+# Version control / CI
 .git/
+.github/
 .gitignore
+
+# IDE / editor
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# Claude Code workspace
+.claude/
+
+# Docs, tests, examples — not needed in the runtime image
+docs/
+tests/
+examples/
+scripts/
+
+# Local environment / logs
+.env
+.env.*
+!.env.example
 *.log
 *.pid
-.env
+
+# OS files
+.DS_Store
+Thumbs.db

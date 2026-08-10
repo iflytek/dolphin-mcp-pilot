@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,7 @@ version = "0.2.0"
 description = "A production-ready MCP server for Apache DolphinScheduler with 58 tools, multi-tenant auth, schedules, DAG creation, guided troubleshooting and raw API passthrough."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 authors = [
   { name = "dolphin-mcp-pilot contributors" }
 ]
@@ -16,7 +16,6 @@ keywords = ["mcp", "model-context-protocol", "dolphinscheduler", "workflow", "sc
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -25,16 +24,16 @@ classifiers = [
   "Topic :: System :: Distributed Computing",
 ]
 dependencies = [
-  "mcp>=1.0.0",
+  "mcp>=1.0.0,<2.0.0",
   "anyio>=4.0.0",
   "uvicorn>=0.30.0",
   "starlette>=0.37.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/your-org/dolphin-mcp-pilot"
-Repository = "https://github.com/your-org/dolphin-mcp-pilot"
-Issues = "https://github.com/your-org/dolphin-mcp-pilot/issues"
+Homepage = "https://github.com/iflytek/dolphin-mcp-pilot"
+Repository = "https://github.com/iflytek/dolphin-mcp-pilot"
+Issues = "https://github.com/iflytek/dolphin-mcp-pilot/issues"
 
 [project.scripts]
 dolphin-mcp-pilot = "dolphin_mcp_pilot.__main__:main"

@@ -186,9 +186,7 @@ def register_instance_tools(mcp: FastMCP):
     def ds_delete_process_instance(project_name: str, process_instance_id: int) -> dict:
         """Delete a historical process instance."""
         pcode = resolve_project_code(project_name)
-        result = ds_delete(
-            f"/projects/{pcode}/process-instances/{process_instance_id}"
-        )
+        result = ds_delete(f"/projects/{pcode}/process-instances/{process_instance_id}")
         require_ok(result, "delete process instance")
         return {"process_instance_id": process_instance_id, "status": "deleted"}
 
@@ -315,9 +313,7 @@ def register_instance_tools(mcp: FastMCP):
         # Format C: JSON discrete list (last resort)
         payload_list = dict(
             base_payload,
-            scheduleTime=json.dumps(
-                {"complementScheduleDateList": schedule_time_str}
-            ),
+            scheduleTime=json.dumps({"complementScheduleDateList": schedule_time_str}),
         )
 
         if run_mode == "RUN_MODE_SERIAL":
@@ -405,7 +401,9 @@ def register_instance_tools(mcp: FastMCP):
             items = []
 
         if state:
-            items = [t for t in items if (t.get("state") or "").upper() == state.upper()]
+            items = [
+                t for t in items if (t.get("state") or "").upper() == state.upper()
+            ]
 
         out = []
         for t in items:
@@ -474,9 +472,7 @@ def register_instance_tools(mcp: FastMCP):
         log_data = result.get("data", "")
         if isinstance(log_data, dict):
             log_text = (
-                log_data.get("message", "")
-                or log_data.get("log", "")
-                or str(log_data)
+                log_data.get("message", "") or log_data.get("log", "") or str(log_data)
             )
         elif isinstance(log_data, str):
             log_text = log_data
@@ -493,9 +489,7 @@ def register_instance_tools(mcp: FastMCP):
         }
 
     @mcp.tool()
-    def ds_force_task_success(
-        project_name: str, task_instance_id: int
-    ) -> dict:
+    def ds_force_task_success(project_name: str, task_instance_id: int) -> dict:
         """Force mark a task as success (dangerous — bypasses actual execution).
 
         ⚠️ Warning: Use only when task is stuck/failed but you've verified data correctness.

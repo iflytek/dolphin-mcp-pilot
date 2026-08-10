@@ -68,7 +68,7 @@ This project is designed for **real operations work**:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/dolphin-mcp-pilot.git
+git clone https://github.com/iflytek/dolphin-mcp-pilot.git
 cd dolphin-mcp-pilot
 
 # 2. Configure environment
@@ -80,7 +80,7 @@ cp .env.example .env
 # or
 start.bat         # Windows
 # or
-docker-compose up -d
+docker compose --profile dev up -d dolphin-mcp-pilot-dev
 ```
 
 ✅ Service will be available at `http://localhost:8001/mcp/` (note the trailing slash)
@@ -89,16 +89,49 @@ docker-compose up -d
 
 ## 📦 Installation Options
 
-### Option A: Docker (Recommended)
+### Option A: Docker Compose (Recommended)
+
+#### A1. Development mode (recommended for now)
+
+Builds from the local Dockerfile and mounts `./dolphin_mcp_pilot` into the container as read-only. Source changes require a container restart (uvicorn is not started with `--reload`):
 
 ```bash
-docker-compose up -d
+# 1. Prepare environment
+cp .env.example .env
+# edit .env — at minimum set DS_URL and DS_TOKEN (see Configuration below)
+
+# 2. Start (dev profile builds locally)
+docker compose --profile dev up -d dolphin-mcp-pilot-dev
+
+# 3. Verify
+docker compose --profile dev ps        # STATUS should show (healthy) after ~10s
+docker compose --profile dev logs -f   # watch startup logs
 ```
+
+The service will be available at `http://localhost:8001/mcp/` (note the trailing slash).
+
+#### A2. Production mode (published image)
+
+> **Note**: The `ghcr.io/iflytek/dolphin-mcp-pilot:latest` image is published automatically when a stable release tag (e.g. `v0.2.0`) is pushed. Until the first release is tagged, use **A1** or **Option B/C** below.
+
+Once a release is available, the prod service pulls from ghcr.io:
+
+```bash
+# Optional: pin to a specific version
+echo "IMAGE_TAG=0.2.0" >> .env
+
+docker compose up -d
+docker compose ps        # STATUS should show (healthy)
+```
+
+See [`docker-compose.yml`](docker-compose.yml) for the full reference (resource limits, log rotation, healthcheck, etc.).
+
+📖 **Detailed deployment guide**: See [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ### Option B: From source
 
 ```bash
-git clone https://github.com/your-org/dolphin-mcp-pilot.git
+git clone https://github.com/iflytek/dolphin-mcp-pilot.git
 cd dolphin-mcp-pilot
 pip install -r requirements.txt
 python -m dolphin_mcp_pilot
@@ -187,11 +220,15 @@ Add to your MCP client config:
 
 > ⚠️ The URL must end with `/`. Without the trailing slash, Starlette returns a 307 redirect, which some MCP clients fail to follow.
 
-**More examples** in `examples/` directory:
+**More examples** in the [`examples/`](examples/README.md) directory:
 - `codebuddy-config.json` - CodeBuddy configuration
 - `claude-desktop-config.json` - Claude Desktop stdio mode
 - `http-auth-token.json` - HTTP with token auth
 - `http-auth-password.json` - HTTP with username/password
+
+Want to share a configuration for another MCP client or deployment mode? Copy the
+[`examples/TEMPLATE`](examples/TEMPLATE) and follow the
+[example contribution guide](examples/README.md#how-to-contribute).
 
 ### Multi-tenant per-request auth
 
@@ -312,7 +349,9 @@ dolphin-mcp-pilot
 
 ## 🤝 Contributing
 
-Contributions welcome! Please open an issue or PR.
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for project changes, or follow the
+[example contribution guide](examples/README.md#how-to-contribute) to share a tested MCP client
+configuration.
 
 ## 🔍 Verify Deployment
 

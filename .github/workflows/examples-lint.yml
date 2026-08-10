@@ -1,0 +1,26 @@
+name: Examples Lint
+
+on:
+  pull_request:
+    paths:
+      - 'examples/**'
+      - '.github/workflows/examples-lint.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'examples/**'
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Lint MCP configuration examples
+        run: python examples/scripts/lint.py

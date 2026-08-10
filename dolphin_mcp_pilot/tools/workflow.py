@@ -508,7 +508,9 @@ def register_workflow_tools(mcp: FastMCP):
                     else:
                         ret["schedule_action"] = "No associated schedule found"
                 else:
-                    ret["schedule_action"] = "Failed to query schedules; skipping auto-activation"
+                    ret["schedule_action"] = (
+                        "Failed to query schedules; skipping auto-activation"
+                    )
             except Exception as e:
                 ret["schedule_action"] = f"Schedule activation error: {str(e)}"
 

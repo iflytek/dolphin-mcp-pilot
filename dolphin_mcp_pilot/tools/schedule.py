@@ -317,7 +317,9 @@ def register_schedule_tools(mcp: FastMCP):
                     rel = ds_post(f"/projects/{pcode}/schedules/{schedule_id}/online")
                     if rel.get("code") == 0:
                         final_state = "ONLINE"
-                        online_detail = f"Re-activated successfully (attempt {attempt + 1})"
+                        online_detail = (
+                            f"Re-activated successfully (attempt {attempt + 1})"
+                        )
                         break
                     else:
                         online_detail = f"Online failed (code={rel.get('code')}): {rel.get('msg', 'unknown')}"

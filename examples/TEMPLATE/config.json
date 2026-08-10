@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "dolphinscheduler": {
+      "type": "sse",
+      "url": "http://your-server:8001/mcp/",
+      "headers": {
+        "X-DS-Token": "YOUR_DOLPHINSCHEDULER_TOKEN"
+      }
+    }
+  }
+}

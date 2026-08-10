@@ -71,19 +71,19 @@ This project is designed for **real operations work**:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/dolphin-mcp-pilot.git
+git clone https://github.com/iflytek/dolphin-mcp-pilot.git
 cd dolphin-mcp-pilot
 
 # 2. Configure environment
 cp .env.example .env
 # Edit .env and set DS_URL + DS_TOKEN (or DS_USER/DS_PASSWORD)
 
-# 3. Start the service
+# 3. 启动服务
 ./start.sh        # Linux/Mac
 # or
 start.bat         # Windows
 # or
-docker-compose up -d
+docker compose --profile dev up -d dolphin-mcp-pilot-dev
 ```
 
 ✅ Service will be available at `http://localhost:8001/mcp/` (note the trailing slash)
@@ -92,16 +92,49 @@ docker-compose up -d
 
 ## 📦 Installation Options
 
-### Option A: Docker (Recommended)
+### Option A: Docker Compose (推荐)
+
+#### A1. 开发模式（当前推荐）
+
+基于本地 Dockerfile 构建，将 `./dolphin_mcp_pilot` 以只读方式挂载进容器。源码修改后需重启容器（uvicorn 未启用 `--reload`）：
 
 ```bash
-docker-compose up -d
+# 1. 准备环境配置
+cp .env.example .env
+# 编辑 .env —— 至少设置 DS_URL 与 DS_TOKEN（详见下方 Configuration）
+
+# 2. 启动服务（dev profile 将本地构建）
+docker compose --profile dev up -d dolphin-mcp-pilot-dev
+
+# 3. 验证
+docker compose --profile dev ps        # STATUS 应在 ~10s 后显示 (healthy)
+docker compose --profile dev logs -f   # 查看启动日志
 ```
+
+服务地址：`http://localhost:8001/mcp/`（注意结尾斜杠）
+
+#### A2. 生产模式（发布镜像）
+
+> **提示**：`ghcr.io/iflytek/dolphin-mcp-pilot:latest` 镜像会在推送稳定 release tag（如 `v0.2.0`）时自动发布。在首个 release 打标前，请使用上方 **A1** 或下方 **Option B/C**。
+
+镜像发布后，prod 服务会直接从 ghcr.io 拉取：
+
+```bash
+# 可选：锁定版本
+echo "IMAGE_TAG=0.2.0" >> .env
+
+docker compose up -d
+docker compose ps        # STATUS 应显示 (healthy)
+```
+
+完整参考（资源限制、日志轮转、健康检查等）见 [`docker-compose.yml`](docker-compose.yml)。
+
+📖 **详细部署指南**：参见 [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ### Option B: From source
 
 ```bash
-git clone https://github.com/your-org/dolphin-mcp-pilot.git
+git clone https://github.com/iflytek/dolphin-mcp-pilot.git
 cd dolphin-mcp-pilot
 pip install -r requirements.txt
 python -m dolphin_mcp_pilot
@@ -190,11 +223,14 @@ Add to your MCP client config:
 
 > ⚠️ The URL must end with `/`. Without the trailing slash, Starlette returns a 307 redirect, which some MCP clients fail to follow.
 
-**More examples** in `examples/` directory:
+更多配置见 [`examples/`](examples/README.md) 目录：
 - `codebuddy-config.json` - CodeBuddy configuration
 - `claude-desktop-config.json` - Claude Desktop stdio mode
 - `http-auth-token.json` - HTTP with token auth
 - `http-auth-password.json` - HTTP with username/password
+
+欢迎分享其他 MCP 客户端或部署方式的配置。复制 [`examples/TEMPLATE`](examples/TEMPLATE)，
+并按照[示例贡献指南](examples/README.md#中文)提交。
 
 ### Multi-tenant per-request auth
 
@@ -315,7 +351,8 @@ dolphin-mcp-pilot
 
 ## 🤝 Contributing
 
-Contributions welcome! Please open an issue or PR.
+欢迎贡献。项目代码修改请阅读 [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md)；如需分享已验证的
+MCP 客户端配置，请按照[示例贡献指南](examples/README.md#中文)提交。
 
 ## 🔍 Verify Deployment
 
