@@ -27,7 +27,7 @@ Usage:
     from dolphin_mcp_pilot import mcp, ds_list_projects
 """
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __author__ = "dolphin-mcp-pilot contributors"
 __license__ = "Apache-2.0"
 

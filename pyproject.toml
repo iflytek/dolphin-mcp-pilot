@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dolphin-mcp-pilot"
-version = "0.2.0"
+version = "0.3.0"
 description = "A production-ready MCP server for Apache DolphinScheduler with 58 tools, multi-tenant auth, schedules, DAG creation, guided troubleshooting and raw API passthrough."
 readme = "README.md"
 requires-python = ">=3.10"

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.3.0] - 2026-08-10
+
 ### Added
 
 - **Release workflow** (`.github/workflows/release.yml`): publishes multi-arch (`linux/amd64` + `linux/arm64`) images to `ghcr.io/iflytek/dolphin-mcp-pilot`
