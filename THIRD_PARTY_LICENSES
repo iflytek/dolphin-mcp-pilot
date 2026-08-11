@@ -39,6 +39,12 @@ Homepage: https://docs.pydantic.dev
 License: MIT
 Copyright: Copyright (c) 2017 to present Pydantic Services Inc. and individual contributors.
 
+Package: pytest
+Version: 8.4.1
+Homepage: https://pytest.org
+License: MIT
+Copyright: Copyright (c) 2004 Holger Krekel and contributors.
+
 
 MIT License Text
 ----------------
