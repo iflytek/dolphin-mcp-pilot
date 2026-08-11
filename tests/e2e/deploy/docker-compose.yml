@@ -1,0 +1,62 @@
+# =============================================================================
+# Docker Compose for E2E testing
+# =============================================================================
+# Uses DolphinScheduler standalone server (all-in-one) for fast startup.
+# Both services are accessible on localhost for the pytest suite.
+#
+# Usage:
+#   docker compose -f tests/e2e/deploy/docker-compose.yml up -d
+#   docker compose -f tests/e2e/deploy/docker-compose.yml down -v
+# =============================================================================
+
+services:
+  # DolphinScheduler standalone (all-in-one: API + Master + Worker + DB)
+  dolphinscheduler:
+    image: apache/dolphinscheduler-standalone-server:${DS_VERSION:-3.4.2}
+    container_name: e2e-dolphinscheduler
+    environment:
+      TZ: Asia/Shanghai
+      # Override default 4GB heap with smaller size for testing
+      JAVA_OPTS: "-server -Xms512m -Xmx2g -Xmn512m -XX:+IgnoreUnrecognizedVMOptions -XX:+ExitOnOutOfMemoryError -DDOCKER=true"
+    ports:
+      - "${E2E_DS_PORT:-12345}:12345"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:12345/dolphinscheduler/ui/"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 6G
+
+  # Dolphin MCP Pilot
+  dolphin-mcp-pilot:
+    build:
+      context: ../../..
+      dockerfile: Dockerfile
+    container_name: e2e-dolphin-mcp-pilot
+    environment:
+      DS_URL: http://dolphinscheduler:12345/dolphinscheduler
+      DS_USER: admin
+      DS_PASSWORD: dolphinscheduler123
+      MCP_PORT: "8001"
+    ports:
+      - "${E2E_PILOT_PORT:-18001}:8001"
+    depends_on:
+      dolphinscheduler:
+        condition: service_healthy
+    healthcheck:
+      # Use Python stdlib (no curl in slim image) to check port
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.settimeout(2); s.connect(('127.0.0.1', 8001)); s.close()"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M

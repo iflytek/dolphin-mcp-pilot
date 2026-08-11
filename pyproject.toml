@@ -44,3 +44,6 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["dolphin_mcp_pilot*"]
+
+[tool.pytest.ini_options]
+filterwarnings = []

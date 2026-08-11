@@ -1,0 +1,80 @@
+# =============================================================================
+# E2E Tests — GitHub Actions Workflow
+# =============================================================================
+# Uses docker-compose with DolphinScheduler standalone server for fast startup.
+# Runs the pytest suite under tests/e2e/.
+#
+# Triggered on PRs and pushes to main/dev, plus manual dispatch.
+# =============================================================================
+name: E2E Tests
+
+on:
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "dolphin_mcp_pilot/**"
+      - "tests/e2e/**"
+      - "scripts/e2e/**"
+      - "Dockerfile"
+      - "requirements.txt"
+      - ".github/workflows/e2e.yml"
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: Docker-compose E2E tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Checkout
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # 2. Python toolchain
+      # -----------------------------------------------------------------------
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            tests/e2e/requirements.txt
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-timeout
+          [[ -f tests/e2e/requirements.txt ]] && pip install -r tests/e2e/requirements.txt || true
+
+      # -----------------------------------------------------------------------
+      # 3. Run the e2e pipeline (docker-compose)
+      # -----------------------------------------------------------------------
+      - name: Run e2e pipeline
+        run: bash scripts/e2e/run-e2e.sh
+
+      # -----------------------------------------------------------------------
+      # 4. Artifacts on failure
+      # -----------------------------------------------------------------------
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs
+          path: |
+            /tmp/e2e-*.log
+          retention-days: 7
+          if-no-files-found: ignore
