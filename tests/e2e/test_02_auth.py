@@ -27,16 +27,16 @@ class TestAuthUserPassword:
     def test_admin_can_list_projects(self, mcp_client):
         resp = mcp_client.call_tool("ds_list_projects", {})
         payload = _parse_tool_text(resp)
-        assert isinstance(payload, list), (
-            f"expected list, got {type(payload)}: {payload}"
-        )
+        assert isinstance(
+            payload, list
+        ), f"expected list, got {type(payload)}: {payload}"
 
     def test_ds_test_connection_succeeds(self, mcp_client):
         resp = mcp_client.call_tool("ds_test_connection", {})
         payload = _parse_tool_text(resp)
-        assert payload.get("status") == "ok" or payload.get("ok") is True, (
-            f"ds_test_connection returned unexpected payload: {payload}"
-        )
+        assert (
+            payload.get("status") == "ok" or payload.get("ok") is True
+        ), f"ds_test_connection returned unexpected payload: {payload}"
 
 
 class TestAuthTokenMode:
@@ -56,9 +56,9 @@ class TestAuthTokenMode:
             )
             healthy.initialize()
             health_resp = healthy.call_tool("ds_help", {})
-            assert health_resp is not None, (
-                f"server unhealthy after token attempt: {exc}"
-            )
+            assert (
+                health_resp is not None
+            ), f"server unhealthy after token attempt: {exc}"
 
 
 class TestMultiTenant:
