@@ -26,7 +26,7 @@ import os
 import re
 import urllib.parse
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ..client import (
     ds_get,
@@ -174,7 +174,7 @@ def normalize_resource_list(resource_list: list) -> list:
     return normalized
 
 
-def register_resource_tools(mcp: FastMCP):
+def register_resource_tools(mcp: MCPServer):
     """Register resource file management MCP tools."""
 
     # ================================================================

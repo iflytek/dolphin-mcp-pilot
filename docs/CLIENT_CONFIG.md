@@ -20,6 +20,18 @@ Add to your MCP client config:
 
 > ⚠️ The URL **must end with `/`**. Without the trailing slash, Starlette returns a 307 redirect, which some MCP clients fail to follow.
 
+## Protocol compatibility
+
+The HTTP endpoint supports both protocol eras:
+
+- MCP 2.0 clients use the stateless `2026-07-28` protocol. Every request is
+  independently routable and no `Mcp-Session-Id` header is issued.
+- MCP 1.x clients continue to use the initialize handshake, but the server
+  handles each request statelessly for load-balancer compatibility.
+
+No client URL changes are required: the endpoint remains `/mcp/`. Stdio
+clients are unchanged.
+
 ## Example Configurations
 
 More examples in the [`examples/`](../examples/) directory:

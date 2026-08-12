@@ -13,22 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""FastMCP 应用"""
+"""MCP server application."""
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ..tools import (
-    register_project_tools,
     register_datasource_tools,
-    register_workflow_tools,
-    register_workflow_advanced_tools,
-    register_instance_tools,
-    register_schedule_tools,
-    register_resource_tools,
-    register_monitor_tools,
-    register_user_tools,
-    register_raw_tools,
     register_help_tools,
+    register_instance_tools,
+    register_monitor_tools,
+    register_project_tools,
+    register_raw_tools,
+    register_resource_tools,
+    register_schedule_tools,
+    register_user_tools,
+    register_workflow_advanced_tools,
+    register_workflow_tools,
 )
 
 # MCP 初始化时返回给客户端的使用指南
@@ -74,8 +74,13 @@ _INSTRUCTIONS = """DolphinScheduler MCP v2.0.19 — 58 个工作流运维工具
 详细文档：调用 ds_help() 或加载 ds-workflow-ops skill。
 """
 
-# 创建 FastMCP 应用
-mcp = FastMCP("DolphinScheduler", instructions=_INSTRUCTIONS)
+# Create the MCP application. MCPServer v2 serves both the legacy handshake
+# protocol and the stateless 2026-07-28 protocol from the same server.
+mcp = MCPServer(
+    "DolphinScheduler",
+    instructions=_INSTRUCTIONS,
+    version="0.3.0",
+)
 
 # 注册所有工具
 register_project_tools(mcp)

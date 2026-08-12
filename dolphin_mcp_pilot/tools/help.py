@@ -15,10 +15,10 @@
 
 """Help and navigation tools."""
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 
-def register_help_tools(mcp: FastMCP):
+def register_help_tools(mcp: MCPServer):
     """Register help and navigation MCP tools."""
 
     @mcp.tool()

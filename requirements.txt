@@ -1,13 +1,13 @@
 # MCP 核心依赖
-mcp>=1.0.0,<2.0.0
-anyio>=4.0.0
+mcp>=2.0.0,<3.0.0
+anyio>=4.9.0
 
 # HTTP 服务器
-uvicorn>=0.30.0
+uvicorn>=0.31.1
 starlette>=0.37.0
 
 # 锁定 pydantic 版本范围，避免 pip 反复回溯解析多个版本超时
-pydantic>=2.11.0,<2.12.0
+pydantic>=2.12.0,<3.0.0
 
 # 测试依赖
 pytest>=7.0.0

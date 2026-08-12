@@ -37,36 +37,36 @@ HTTP mode per-request auth headers:
 
 import sys
 
-import anyio
 import uvicorn
-from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from starlette.applications import Starlette
-from starlette.routing import Mount
 
-from .server import mcp
 from .config import DS_MCP_TRANSPORT, MCP_HOST, MCP_PORT
 from .middleware import AuthMiddleware
+from .server import mcp
+
+
+def build_http_app() -> Starlette:
+    """Build the stateless MCP 2.0 HTTP app with per-request DS auth."""
+    app = mcp.streamable_http_app(
+        streamable_http_path="/mcp/",
+        stateless_http=True,
+        host=MCP_HOST,
+    )
+    app.add_middleware(AuthMiddleware)
+    return app
 
 
 def main() -> None:
     if DS_MCP_TRANSPORT == "http":
-        session_manager = StreamableHTTPSessionManager(app=mcp._mcp_server)
-        starlette_app = Starlette(
-            debug=False,
-            routes=[Mount("/mcp", app=session_manager.handle_request)],
-            lifespan=lambda app: session_manager.run(),
-        )
-        starlette_app.add_middleware(AuthMiddleware)
-
         config = uvicorn.Config(
-            starlette_app,
+            build_http_app(),
             host=MCP_HOST,
             port=MCP_PORT,
             log_level="info",
         )
         print(f"dolphin-mcp-pilot listening on http://{MCP_HOST}:{MCP_PORT}/mcp/")
         print("Pass X-DS-Token or X-DS-User/X-DS-Password headers per request.")
-        anyio.run(uvicorn.Server(config).serve)
+        uvicorn.Server(config).run()
     else:
         print("dolphin-mcp-pilot starting in stdio mode", file=sys.stderr)
         mcp.run()

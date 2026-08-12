@@ -18,7 +18,7 @@
 import json
 import time
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ..client import ds_get, ds_post, ds_put
 from ..config import get_tenant_code
@@ -154,7 +154,7 @@ def _build_task_definition(task_code: int, task: dict) -> dict:
     return base
 
 
-def register_workflow_advanced_tools(mcp: FastMCP):
+def register_workflow_advanced_tools(mcp: MCPServer):
     """Register workflow advanced operation MCP tools."""
 
     @mcp.tool()

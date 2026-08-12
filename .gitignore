@@ -36,3 +36,4 @@ htmlcov/
 
 # Repo application doc (not part of the project)
 SUBMISSION_ISSUE_EN.md
+.venv*/
