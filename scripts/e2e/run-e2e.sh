@@ -87,7 +87,7 @@ DS_URL="http://localhost:${E2E_DS_PORT}/dolphinscheduler/ui/"
 deadline=$((SECONDS + 300))
 until curl -sf -o /dev/null "${DS_URL}"; do
   if [[ "${SECONDS}" -ge "${deadline}" ]]; then
-    echo "ERROR: DolphinScheduler did not become ready within 180s" >&2
+    echo "ERROR: DolphinScheduler did not become ready within 300s" >&2
     ${COMPOSE} -f "${COMPOSE_FILE}" logs dolphinscheduler
     exit 1
   fi
