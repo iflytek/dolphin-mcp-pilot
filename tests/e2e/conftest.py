@@ -17,7 +17,9 @@ Configuration via environment variables:
 """
 
 import os
+import socket
 import time
+import urllib.parse
 import urllib.request
 
 import pytest
@@ -63,6 +65,22 @@ def wait_for_url(url, timeout=120, interval=2):
     )
 
 
+def wait_for_port(host, port, timeout=60, interval=2):
+    """Poll a TCP listener without opening a potentially streaming HTTP response."""
+    deadline = time.time() + timeout
+    last_exc = None
+    while time.time() < deadline:
+        try:
+            with socket.create_connection((host, port), timeout=2):
+                return True
+        except OSError as exc:
+            last_exc = exc
+        time.sleep(interval)
+    raise TimeoutError(
+        f"Service at {host}:{port} did not become ready within {timeout}s: {last_exc}"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -89,7 +107,12 @@ def pilot_url():
 @pytest.fixture(scope="session", autouse=True)
 def wait_for_services(pilot_url, ds_url):
     """Block the session until both services respond to HTTP."""
-    wait_for_url(pilot_url + "/mcp/", timeout=60)
+    parsed_pilot_url = urllib.parse.urlsplit(pilot_url)
+    wait_for_port(
+        parsed_pilot_url.hostname or "127.0.0.1",
+        parsed_pilot_url.port or PILOT_PORT,
+        timeout=60,
+    )
     wait_for_url(ds_url + "/dolphinscheduler/ui/login", timeout=180)
     yield
 

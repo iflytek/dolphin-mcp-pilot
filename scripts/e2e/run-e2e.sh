@@ -115,10 +115,10 @@ log "  login OK"
 log "[5/6] Starting dolphin-mcp-pilot"
 ${COMPOSE} -f "${COMPOSE_FILE}" up -d dolphin-mcp-pilot 2>&1 | tee "${LOG_PREFIX}-pilot-up.log"
 
-# Wait for pilot healthy (any HTTP response means server is up)
-PILOT_URL="http://localhost:${E2E_PILOT_PORT}/mcp/"
+# Wait for the pilot TCP listener. A GET to the MCP endpoint can remain open as
+# a streaming response, so it is not a safe readiness probe.
 deadline=$((SECONDS + 60))
-until curl -s -o /dev/null "${PILOT_URL}"; do
+until python -c 'import socket, sys; socket.create_connection(("127.0.0.1", int(sys.argv[1])), timeout=2).close()' "${E2E_PILOT_PORT}"; do
   if [[ "${SECONDS}" -ge "${deadline}" ]]; then
     echo "ERROR: dolphin-mcp-pilot did not become ready within 60s" >&2
     ${COMPOSE} -f "${COMPOSE_FILE}" logs dolphin-mcp-pilot
