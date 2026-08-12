@@ -127,8 +127,8 @@ def admin_credentials():
 def mcp_client(pilot_url, admin_credentials):
     """An initialized MCPClient with admin credentials.
 
-    The client is shared across the session; do not mutate its session_id
-    from individual tests (create a fresh MCPClient if you need isolation).
+    The facade opens a fresh stateless MCP transport for each operation.
+    Create a separate MCPClient when a test needs different credentials.
     """
     client = MCPClient(
         pilot_url,
