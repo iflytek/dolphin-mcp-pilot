@@ -115,10 +115,12 @@ log "  login OK"
 log "[5/6] Starting dolphin-mcp-pilot"
 ${COMPOSE} -f "${COMPOSE_FILE}" up -d dolphin-mcp-pilot 2>&1 | tee "${LOG_PREFIX}-pilot-up.log"
 
-# Wait for the pilot TCP listener. A GET to the MCP endpoint can remain open as
-# a streaming response, so it is not a safe readiness probe.
+# Wait for the container's internal health check. The published Docker port can
+# accept TCP before uvicorn is listening and would make pytest race application
+# startup. A GET to the MCP endpoint can also remain open as a stream.
+PILOT_CONTAINER_ID="$(${COMPOSE} -f "${COMPOSE_FILE}" ps -q dolphin-mcp-pilot)"
 deadline=$((SECONDS + 60))
-until python -c 'import socket, sys; socket.create_connection(("127.0.0.1", int(sys.argv[1])), timeout=2).close()' "${E2E_PILOT_PORT}"; do
+until [[ "$(docker inspect --format='{{.State.Health.Status}}' "${PILOT_CONTAINER_ID}" 2>/dev/null)" == "healthy" ]]; do
   if [[ "${SECONDS}" -ge "${deadline}" ]]; then
     echo "ERROR: dolphin-mcp-pilot did not become ready within 60s" >&2
     ${COMPOSE} -f "${COMPOSE_FILE}" logs dolphin-mcp-pilot
