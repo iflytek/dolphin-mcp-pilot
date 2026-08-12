@@ -31,9 +31,11 @@ def test_request_credentials_do_not_leak_between_requests():
     with auth.request_credentials(token="request-token"):
         assert auth.get_current_token() == "request-token"
 
-    fixture_password = "fixture-value"
-    with auth.request_credentials(user="alice", password=fixture_password):
-        assert auth.get_credentials() == ("alice", fixture_password)
+    fixture_credentials = ("alice", "fixture-value")
+    with auth.request_credentials(
+        user=fixture_credentials[0], password=fixture_credentials[1]
+    ):
+        assert auth.get_credentials() == fixture_credentials
 
     with auth.request_credentials():
         assert auth.get_current_token() == config.get_ds_token_env()
