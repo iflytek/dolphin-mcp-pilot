@@ -4,6 +4,7 @@
 import asyncio
 
 from mcp.client import Client
+from starlette.testclient import TestClient
 
 from dolphin_mcp_pilot import auth, config, mcp
 from dolphin_mcp_pilot.__main__ import build_http_app
@@ -14,6 +15,20 @@ def test_http_app_uses_stateless_transport():
 
     assert app is not None
     assert mcp.session_manager.stateless is True
+
+
+def test_http_app_accepts_non_local_host_headers():
+    with TestClient(build_http_app()) as client:
+        response = client.get(
+            "/mcp/",
+            headers={
+                "Host": "pilot.example.com:443",
+                "MCP-Protocol-Version": "2026-07-28",
+            },
+        )
+
+    assert response.status_code == 405
+    assert response.headers["Allow"] == "POST"
 
 
 def test_server_supports_modern_and_legacy_clients():
