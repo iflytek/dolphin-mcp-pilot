@@ -85,6 +85,9 @@ Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for project ch
 [example contribution guide](examples/README.md#how-to-contribute) to share a tested MCP client
 configuration.
 
+Used dolphin-mcp-pilot for something real? Write it up in [`cases/`](cases/README.md) — a gallery of
+community usage stories (agent-driven DolphinScheduler ops), each linked to a public post.
+
 ## 📄 License
 
 [Apache-2.0](LICENSE)

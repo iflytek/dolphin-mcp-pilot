@@ -81,6 +81,8 @@ docker compose --profile dev up -d dolphin-mcp-pilot-dev
 
 欢迎贡献。项目代码修改请阅读 [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md)；如需分享已验证的 MCP 客户端配置，请按照[示例贡献指南](examples/README.md#中文)提交。
 
+用 dolphin-mcp-pilot 做成过真实的事？欢迎写进 [`cases/`](cases/README.md)——一个社区使用故事画廊（智能体驱动的 DolphinScheduler 运维），每个案例都附一条公开帖子链接。
+
 ## 📄 许可证
 
 [Apache-2.0](LICENSE)
