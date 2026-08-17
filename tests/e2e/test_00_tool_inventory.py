@@ -1,0 +1,72 @@
+"""MCP discovery coverage for the complete public tool inventory."""
+
+EXPECTED_TOOL_NAMES = {
+    "ds_clone_workflow",
+    "ds_complement_data",
+    "ds_create_dag_workflow",
+    "ds_create_folder",
+    "ds_create_project",
+    "ds_create_workflow",
+    "ds_delete_process_instance",
+    "ds_delete_project",
+    "ds_delete_resource",
+    "ds_delete_schedule",
+    "ds_delete_workflow",
+    "ds_download_resource",
+    "ds_force_task_success",
+    "ds_get_latest_failure_log",
+    "ds_get_resource_by_name",
+    "ds_get_task_detail",
+    "ds_get_task_log",
+    "ds_get_workflow",
+    "ds_help",
+    "ds_list_datasources",
+    "ds_list_process_instances",
+    "ds_list_projects",
+    "ds_list_resources",
+    "ds_list_schedules",
+    "ds_list_task_instances",
+    "ds_list_tenants",
+    "ds_list_users",
+    "ds_list_workflow_versions",
+    "ds_list_workflows",
+    "ds_modify_workflow_dag",
+    "ds_monitor_masters",
+    "ds_monitor_workers",
+    "ds_offline_schedule",
+    "ds_online_create_file",
+    "ds_online_schedule",
+    "ds_pause_process_instance",
+    "ds_put_lite",
+    "ds_raw_delete",
+    "ds_raw_get",
+    "ds_raw_post",
+    "ds_raw_put",
+    "ds_release_workflow",
+    "ds_rename_project",
+    "ds_rename_resource",
+    "ds_rerun_from_failure",
+    "ds_rerun_process_instance",
+    "ds_resume_process_instance",
+    "ds_rollback_workflow_version",
+    "ds_run_workflow",
+    "ds_set_schedule",
+    "ds_skip_task",
+    "ds_stop_process_instance",
+    "ds_test_connection",
+    "ds_update_resource_content",
+    "ds_update_schedule_cron",
+    "ds_update_task_param",
+    "ds_update_workflow",
+    "ds_upload_file",
+    "ds_view_resource",
+}
+
+
+def test_complete_tool_inventory_is_discoverable(mcp_client):
+    """Catch missing, renamed, or duplicate tools at the MCP boundary."""
+    tools = mcp_client.tools_list()
+    names = [tool["name"] for tool in tools]
+
+    assert len(names) == len(set(names)), "tools/list returned duplicate tool names"
+    assert set(names) == EXPECTED_TOOL_NAMES
