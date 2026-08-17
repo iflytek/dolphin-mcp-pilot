@@ -24,7 +24,7 @@ classifiers = [
   "Topic :: System :: Distributed Computing",
 ]
 dependencies = [
-  "mcp>=1.0.0,<2.0.0",
+  "mcp>=1.0.0,<3.0.0",
   "anyio>=4.0.0",
   "uvicorn>=0.30.0",
   "starlette>=0.37.0",
