@@ -34,6 +34,7 @@ This project is designed for **real operations work**:
 - **53+ tools** covering most practical DS operations
 - **Two auth modes**: API Token (`X-DS-Token`) or User/Password (`X-DS-User` + `X-DS-Password`)
 - **Multi-tenant HTTP mode**: each caller can use its own credentials
+- **MCP 2.0 stateless HTTP** with automatic compatibility for MCP 1.x clients
 - **Workflow creation**: simple SQL and complex DAG workflows with multiple task types
 - **Schedule management** (cron-based)
 - **Instance lifecycle control** (pause/resume/rerun/rerun-from-failure/delete)
@@ -71,6 +72,8 @@ docker compose --profile dev up -d dolphin-mcp-pilot-dev
 
 ## ✨ What's new
 
+- **MCP 2.0**: supports the stateless 2026-07-28 protocol while keeping legacy
+  handshake clients and stdio configurations working.
 - **Guided troubleshooting**: `ds_list_process_instances` attaches a `next_action`
   hint to RUNNING/FAILURE instances, pointing agents to `ds_list_task_instances`
   to inspect individual task nodes.
@@ -94,4 +97,5 @@ community usage stories (agent-driven DolphinScheduler ops), each linked to a pu
 
 ## 🙏 Acknowledgments
 
-Built with [FastMCP](https://github.com/jlowin/fastmcp) and inspired by the Apache DolphinScheduler community.
+Built with the official [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
+and inspired by the Apache DolphinScheduler community.

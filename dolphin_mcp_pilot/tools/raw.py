@@ -17,12 +17,12 @@
 
 import json
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ..client import ds_get, ds_post, ds_put, ds_delete
 
 
-def register_raw_tools(mcp: FastMCP):
+def register_raw_tools(mcp: MCPServer):
     """Register raw API passthrough MCP tools."""
 
     @mcp.tool()

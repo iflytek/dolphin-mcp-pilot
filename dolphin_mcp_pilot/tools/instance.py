@@ -18,13 +18,13 @@
 import json
 from datetime import datetime
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ..client import ds_get, ds_post, ds_delete
 from ..utils import require_ok, resolve_project_code
 
 
-def register_instance_tools(mcp: FastMCP):
+def register_instance_tools(mcp: MCPServer):
     """Register instance management MCP tools."""
 
     @mcp.tool()

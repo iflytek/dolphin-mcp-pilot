@@ -15,13 +15,13 @@
 
 """Monitoring tools."""
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ..client import ds_get
 from ..utils import require_ok
 
 
-def register_monitor_tools(mcp: FastMCP):
+def register_monitor_tools(mcp: MCPServer):
     """Register monitoring MCP tools."""
 
     @mcp.tool()

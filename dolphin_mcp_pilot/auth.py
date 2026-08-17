@@ -30,8 +30,10 @@ import json
 import time
 import urllib.parse
 import urllib.request
+from collections.abc import Iterator
+from contextlib import contextmanager
 
-from .config import get_ds_url, get_ds_credentials, get_ds_token_env
+from .config import get_ds_credentials, get_ds_token_env, get_ds_url
 
 # ---- per-request credentials ----
 _current_ds_user: contextvars.ContextVar[str] = contextvars.ContextVar(
@@ -61,6 +63,25 @@ def set_current_credentials(
         _current_ds_password.set(password)
     if token:
         _current_ds_token.set(token)
+
+
+@contextmanager
+def request_credentials(
+    user: str = "",
+    password: str = "",
+    token: str = "",
+) -> Iterator[None]:
+    """Set credentials for exactly one request, then restore prior context."""
+    resets = (
+        (_current_ds_user, _current_ds_user.set(user)),
+        (_current_ds_password, _current_ds_password.set(password)),
+        (_current_ds_token, _current_ds_token.set(token)),
+    )
+    try:
+        yield
+    finally:
+        for variable, reset_token in reversed(resets):
+            variable.reset(reset_token)
 
 
 def get_current_token() -> str:

@@ -18,7 +18,7 @@
 import json
 import time
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ..client import ds_get, ds_post, ds_put, ds_delete
 from ..utils import require_ok, resolve_project_code
@@ -39,7 +39,7 @@ def ds_put_lite(pcode: int, schedule_id: int, schedule_json: str) -> dict:
     )
 
 
-def register_schedule_tools(mcp: FastMCP):
+def register_schedule_tools(mcp: MCPServer):
     """Register schedule management MCP tools."""
 
     @mcp.tool()

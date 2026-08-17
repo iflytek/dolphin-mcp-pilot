@@ -15,13 +15,13 @@
 
 """Data source management tools."""
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ..client import ds_get
 from ..utils import require_ok
 
 
-def register_datasource_tools(mcp: FastMCP):
+def register_datasource_tools(mcp: MCPServer):
     """Register data source management MCP tools."""
 
     @mcp.tool()

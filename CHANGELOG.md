@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- MCP 2026-07-28 stateless protocol support through the MCP Python SDK 2.x.
+- CI compatibility coverage for both an MCP 1.29 legacy client and an MCP 2.0
+  client against the same HTTP server.
+
+### Changed
+
+- Replaced the private FastMCP/session-manager integration with the public
+  `MCPServer.streamable_http_app()` API.
+- HTTP runs statelessly. MCP 2.0 requests never receive `Mcp-Session-Id`;
+  legacy clients remain supported by a per-request compatibility transport.
+- Raised the runtime dependency floor to `mcp>=2,<3`, `anyio>=4.9`,
+  `uvicorn>=0.31.1`, and `pydantic>=2.12`.
+
+### Fixed
+
+- Request authentication context is now restored after every HTTP request so
+  credentials cannot carry over to a later unauthenticated request.
+
+The HTTP endpoint remains `/mcp/`, and stdio behavior is unchanged.
+
 ---
 
 ## [0.3.0] - 2026-08-10

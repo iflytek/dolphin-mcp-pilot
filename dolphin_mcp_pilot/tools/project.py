@@ -15,7 +15,7 @@
 
 """Project management tools."""
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ..client import ds_get, ds_post, ds_delete, ds_api_request
 from ..utils import require_ok, resolve_project_code
@@ -23,7 +23,7 @@ from ..auth import login
 from ..config import get_ds_url
 
 
-def register_project_tools(mcp: FastMCP):
+def register_project_tools(mcp: MCPServer):
     """Register project management MCP tools."""
 
     @mcp.tool()

@@ -27,7 +27,7 @@ Supported headers:
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
-from .auth import set_current_credentials
+from .auth import request_credentials
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
@@ -36,7 +36,5 @@ class AuthMiddleware(BaseHTTPMiddleware):
         user = request.headers.get("X-DS-User", "")
         password = request.headers.get("X-DS-Password", "")
 
-        if token or (user and password):
-            set_current_credentials(user=user, password=password, token=token)
-
-        return await call_next(request)
+        with request_credentials(user=user, password=password, token=token):
+            return await call_next(request)

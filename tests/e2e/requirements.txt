@@ -1,0 +1,2 @@
+# Official MCP 2.0 client used by the container E2E harness.
+mcp>=2.0.0,<3.0.0

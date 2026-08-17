@@ -15,13 +15,13 @@
 
 """User and tenant management tools."""
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ..client import ds_get
 from ..utils import require_ok
 
 
-def register_user_tools(mcp: FastMCP):
+def register_user_tools(mcp: MCPServer):
     """Register user and tenant management MCP tools."""
 
     @mcp.tool()

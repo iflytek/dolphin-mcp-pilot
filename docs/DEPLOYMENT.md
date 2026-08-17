@@ -40,6 +40,11 @@ docker compose up -d
 
 ✅ Service will be available at `http://localhost:8001/mcp/` (note the trailing slash)
 
+The endpoint serves MCP 2.0's stateless `2026-07-28` protocol and remains
+compatible with MCP 1.x clients. Because the HTTP transport keeps no
+`Mcp-Session-Id` state, requests can be distributed across replicas without
+session affinity.
+
 ## 🐳 Docker Compose Reference
 
 The [`docker-compose.yml`](../docker-compose.yml) provides two services that share configuration via YAML anchors (`x-common`):
@@ -92,7 +97,7 @@ All values are tunable via `.env` variables (`LOG_MAX_SIZE`, `CPU_LIMIT`, `MEMOR
 
 ## 🔍 Verify Deployment
 
-### Test MCP handshake
+### Test legacy MCP compatibility
 
 ```bash
 curl -X POST http://localhost:8001/mcp/ \
@@ -103,6 +108,9 @@ curl -X POST http://localhost:8001/mcp/ \
 ```
 
 Expected: an SSE `data:` line containing `"serverInfo":{"name":"DolphinScheduler",...}`
+
+MCP 2.0 clients use `server/discover` instead of this legacy initialize
+handshake; both paths are exercised in CI.
 
 > **Note**: URL must end with `/`. Without it, Starlette returns HTTP 307 redirect, which some MCP clients fail to follow.
 

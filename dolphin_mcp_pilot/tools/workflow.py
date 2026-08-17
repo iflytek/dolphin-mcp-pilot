@@ -18,14 +18,14 @@
 import json
 import time
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from ..client import ds_get, ds_post, ds_delete
 from ..config import get_tenant_code
 from ..utils import require_ok, resolve_project_code
 
 
-def register_workflow_tools(mcp: FastMCP):
+def register_workflow_tools(mcp: MCPServer):
     """Register workflow basic operation MCP tools."""
 
     @mcp.tool()

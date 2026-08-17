@@ -1,114 +1,71 @@
-"""Lightweight MCP-over-HTTP JSON-RPC client for e2e tests.
+"""Synchronous test facade over the official MCP 2.0 client."""
 
-Uses only Python stdlib (urllib.request, json) so the e2e suite
-has no extra runtime dependencies beyond pytest.
-"""
+import asyncio
 
-import json
-import urllib.request
+import httpx2
+from mcp.client import Client
+from mcp.client.streamable_http import streamable_http_client
 
 
 class MCPClient:
-    """Minimal MCP client for tests.
-
-    Supports user/password or token auth and handles both JSON and SSE responses.
-    """
+    """Minimal synchronous facade for the stateless MCP E2E tests."""
 
     def __init__(self, base_url, user="", password="", token=""):
         self.base_url = base_url.rstrip("/") + "/mcp/"
         self.user = user
         self.password = password
         self.token = token
-        self.session_id = None
-        self._req_id = 0
-
-    def _next_id(self):
-        self._req_id += 1
-        return self._req_id
+        self.protocol_version = None
 
     def _headers(self):
-        h = {
-            "Content-Type": "application/json",
-            "Accept": "application/json, text/event-stream",
-        }
+        headers = {}
         if self.user and self.password:
-            h["X-DS-User"] = self.user
-            h["X-DS-Password"] = self.password
+            headers["X-DS-User"] = self.user
+            headers["X-DS-Password"] = self.password
         if self.token:
-            h["X-DS-Token"] = self.token
-        if self.session_id:
-            h["mcp-session-id"] = self.session_id
-        return h
+            headers["X-DS-Token"] = self.token
+        return headers
 
-    def _call(self, payload):
-        req = urllib.request.Request(
-            self.base_url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers=self._headers(),
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            sid = resp.headers.get("mcp-session-id") or resp.headers.get(
-                "Mcp-Session-Id"
+    async def _run(self, operation):
+        async with httpx2.AsyncClient(headers=self._headers()) as http_client:
+            transport = streamable_http_client(
+                self.base_url,
+                http_client=http_client,
             )
-            if sid:
-                self.session_id = sid
-            body = resp.read().decode("utf-8")
-            ct = resp.headers.get("Content-Type") or ""
-            if "text/event-stream" in ct:
-                return self._parse_sse(body)
-            return json.loads(body) if body else {}
-
-    @staticmethod
-    def _parse_sse(body):
-        for line in body.strip().split("\n"):
-            if line.startswith("data: "):
-                return json.loads(line[6:])
-        raise ValueError(f"No SSE data found in: {body[:200]}")
+            async with Client(transport, read_timeout_seconds=30) as client:
+                self.protocol_version = client.protocol_version
+                return await operation(client)
 
     def initialize(self):
-        """Perform the MCP initialize handshake."""
-        result = self._call(
-            {
+        """Verify that the official client can negotiate with the server."""
+
+        async def negotiated_protocol(client):
+            return {
                 "jsonrpc": "2.0",
-                "id": self._next_id(),
-                "method": "initialize",
-                "params": {
-                    "protocolVersion": "2024-11-05",
-                    "capabilities": {},
-                    "clientInfo": {"name": "e2e-test", "version": "1.0"},
-                },
+                "result": {"protocolVersion": client.protocol_version},
             }
-        )
-        # Send the notifications/initialized follow-up (no id, no response expected).
-        self._call(
-            {
-                "jsonrpc": "2.0",
-                "method": "notifications/initialized",
-                "params": {},
-            }
-        )
-        return result
+
+        return asyncio.run(self._run(negotiated_protocol))
 
     def tools_list(self):
-        """Return the list of registered tools."""
-        resp = self._call(
-            {
-                "jsonrpc": "2.0",
-                "id": self._next_id(),
-                "method": "tools/list",
-                "params": {},
-            }
-        )
-        return resp.get("result", {}).get("tools", [])
+        """Return registered tools using their JSON wire representation."""
+
+        async def list_tools(client):
+            result = await client.list_tools()
+            return [
+                tool.model_dump(mode="json", by_alias=True) for tool in result.tools
+            ]
+
+        return asyncio.run(self._run(list_tools))
 
     def call_tool(self, name, arguments=None):
-        """Call an MCP tool and return the raw JSON-RPC response."""
-        return self._call(
-            {
+        """Call a tool and preserve the legacy JSON-RPC-shaped test result."""
+
+        async def call(client):
+            result = await client.call_tool(name, arguments or {})
+            return {
                 "jsonrpc": "2.0",
-                "id": self._next_id(),
-                "method": "tools/call",
-                "params": {"name": name, "arguments": arguments or {}},
+                "result": result.model_dump(mode="json", by_alias=True),
             }
-        )
+
+        return asyncio.run(self._run(call))

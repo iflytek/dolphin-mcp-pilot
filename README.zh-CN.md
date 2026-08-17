@@ -33,6 +33,7 @@ Apache DolphinScheduler 的生产级 MCP 服务器。
 - **53+ 工具**，覆盖 DS 大部分实用操作
 - **两种鉴权模式**：API Token（`X-DS-Token`）或用户名密码（`X-DS-User` + `X-DS-Password`）
 - **多租户 HTTP 模式**：每个调用方可使用自己的凭据
+- **MCP 2.0 无状态 HTTP**：同时自动兼容 MCP 1.x 客户端
 - **工作流创建**：简单 SQL 工作流 + 多任务类型复杂 DAG
 - **调度管理**（基于 cron）
 - **实例生命周期控制**（暂停 / 恢复 / 重跑 / 从失败处重跑 / 删除）
@@ -70,6 +71,8 @@ docker compose --profile dev up -d dolphin-mcp-pilot-dev
 
 ## ✨ 最新动态
 
+- **MCP 2.0**：支持 2026-07-28 无状态协议，同时保持旧版握手客户端和
+  stdio 配置兼容。
 - **引导式排错**：`ds_list_process_instances` 为 RUNNING/FAILURE 实例附加 `next_action`
   提示，引导 Agent 通过 `ds_list_task_instances` 检查具体任务节点。
 - **可靠的补数据顺序**：串行补数据使用 `complementStartDate`/`complementEndDate`
@@ -89,4 +92,5 @@ docker compose --profile dev up -d dolphin-mcp-pilot-dev
 
 ## 🙏 致谢
 
-基于 [FastMCP](https://github.com/jlowin/fastmcp) 构建，灵感来自 Apache DolphinScheduler 社区。 (docs: slim README to OSS essentials; extract detailed content to docs/ (issue #13))
+基于官方 [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
+构建，灵感来自 Apache DolphinScheduler 社区。
