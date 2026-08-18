@@ -37,7 +37,6 @@ EXPECTED_TOOL_NAMES = {
     "ds_online_create_file",
     "ds_online_schedule",
     "ds_pause_process_instance",
-    "ds_put_lite",
     "ds_raw_delete",
     "ds_raw_get",
     "ds_raw_post",

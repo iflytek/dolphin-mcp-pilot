@@ -3,8 +3,8 @@
 import json
 
 
-def parse_successful_tool_text(response):
-    """Validate the MCP wire envelope and decode its first text item."""
+def parse_successful_tool_items(response):
+    """Validate the MCP wire envelope and decode every text item."""
     assert response.get("jsonrpc") == "2.0", f"invalid JSON-RPC envelope: {response}"
     assert "error" not in response, f"tool call returned JSON-RPC error: {response}"
 
@@ -14,16 +14,17 @@ def parse_successful_tool_text(response):
         result.get("isError") is not True
     ), f"tool call returned MCP error: {response}"
 
+    assert result.get("resultType") == "complete", f"incomplete tool result: {result}"
     content = result.get("content")
-    assert (
-        isinstance(content, list) and content
-    ), f"tool returned no content: {response}"
-    first = content[0]
-    assert first.get("type") == "text", f"expected text content: {first}"
+    assert isinstance(content, list), f"tool content must be a list: {response}"
 
-    text = first.get("text")
-    assert isinstance(text, str), f"text content must be a string: {first}"
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError as exc:
-        raise AssertionError(f"tool text is not valid JSON: {text!r}") from exc
+    items = []
+    for item in content:
+        assert item.get("type") == "text", f"expected text content: {item}"
+        item_text = item.get("text")
+        assert isinstance(item_text, str), f"text content must be a string: {item}"
+        try:
+            items.append(json.loads(item_text))
+        except json.JSONDecodeError as exc:
+            raise AssertionError(f"tool text is not valid JSON: {item_text!r}") from exc
+    return items

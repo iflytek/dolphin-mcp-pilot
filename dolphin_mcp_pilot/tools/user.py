@@ -27,7 +27,7 @@ def register_user_tools(mcp: MCPServer):
     @mcp.tool()
     def ds_list_users() -> list:
         """List all DS users (useful for debugging workflow user_id foreign key issues)."""
-        result = ds_get("/users/list")
+        result = ds_get("/users/list-all")
         require_ok(result, "list users")
         return [
             {

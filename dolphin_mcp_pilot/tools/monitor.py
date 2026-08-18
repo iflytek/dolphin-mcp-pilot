@@ -27,13 +27,13 @@ def register_monitor_tools(mcp: MCPServer):
     @mcp.tool()
     def ds_monitor_masters() -> list:
         """Check DS master node status (verify scheduler is alive)."""
-        result = ds_get("/monitor/masters")
+        result = ds_get("/monitor/MASTER")
         require_ok(result, "get master status")
         return result.get("data", []) or []
 
     @mcp.tool()
     def ds_monitor_workers() -> list:
         """Check DS worker node status (verify task executors are alive)."""
-        result = ds_get("/monitor/workers")
+        result = ds_get("/monitor/WORKER")
         require_ok(result, "get worker status")
         return result.get("data", []) or []
