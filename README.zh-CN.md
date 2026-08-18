@@ -42,6 +42,12 @@ Apache DolphinScheduler 的生产级 MCP 服务器。
 
 ## 🚀 快速开始
 
+### 前置条件
+
+- 已运行的 DolphinScheduler 3.x，且其 API 可从 Docker 容器访问
+- Docker 与 Compose v2（可通过 `docker compose version` 检查）
+- DolphinScheduler API Token（推荐），或用户名和密码
+
 ```bash
 # 1. 克隆仓库
 git clone https://github.com/iflytek/dolphin-mcp-pilot.git
@@ -49,13 +55,45 @@ cd dolphin-mcp-pilot
 
 # 2. 配置环境
 cp .env.example .env
-# 编辑 .env —— 至少设置 DS_URL 和 DS_TOKEN（或 DS_USER/DS_PASSWORD）
+# 编辑 .env —— 设置 DS_URL 和 DS_TOKEN（或 DS_USER/DS_PASSWORD）
+# DS_URL 示例：http://your-dolphinscheduler-host:12345/dolphinscheduler
 
-# 3. 启动服务（dev 模式）
+# 3. 从当前源码构建并启动服务
 docker compose --profile dev up -d dolphin-mcp-pilot-dev
+
+# 4. 确认容器状态为 healthy
+docker compose --profile dev ps
 ```
 
-✅ 服务地址：`http://localhost:8001/mcp/`（注意结尾斜杠）
+MCP 地址为 `http://localhost:8001/mcp/`（必须保留结尾斜杠）。将它加入支持
+HTTP/SSE 的 MCP 客户端：
+
+```json
+{
+  "mcpServers": {
+    "dolphinscheduler": {
+      "type": "sse",
+      "url": "http://localhost:8001/mcp/",
+      "headers": { "X-DS-Token": "your_api_token" }
+    }
+  }
+}
+```
+
+首次连接建议先进行安全的只读检查：**“列出我的 DolphinScheduler 项目和工作流，不要做任何
+修改。”** 不同客户端的详细配置和用户名/密码鉴权方式请参阅[客户端配置](docs/CLIENT_CONFIG.md)。
+
+## 💡 常见使用场景
+
+| 场景 | 示例请求 | 主要工具 |
+|---|---|---|
+| 定位失败任务 | “找出最近失败的工作流，显示失败节点和日志，并给出下一步建议，不要执行修改。” | `ds_list_process_instances`、`ds_list_task_instances`、`ds_get_latest_failure_log` |
+| 补跑缺失数据 | “按串行方式补跑 2026-08-01 至 2026-08-07，从校验节点开始并包含下游任务。” | `ds_complement_data` |
+| 创建并调度工作流 | “创建一个每日 SQL 工作流并添加 cron 调度，上线前先展示定义让我确认。” | `ds_create_workflow`、`ds_set_schedule`、`ds_online_schedule` |
+| 为多个 Agent 提供受控访问 | 运行一个 HTTP MCP 服务，由每个调用方提供各自的 DolphinScheduler 凭据。 | 每请求 `X-DS-*` 请求头 |
+
+此外还可暂停、恢复、重跑、克隆和回滚工作流，管理资源，并通过原始 API 处理尚未封装的操作。
+在 MCP 客户端中先调用 `ds_help(category="quickstart")`，可查看各类任务的推荐操作流程。
 
 ## 📚 文档
 
