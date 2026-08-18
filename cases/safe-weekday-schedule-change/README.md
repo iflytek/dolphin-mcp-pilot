@@ -6,7 +6,7 @@ category: version-safety
 host: claude-code
 testedWith: dolphin-mcp-pilot 0.3.0-3-g18aa99d
 channels:
-  - https://github.com/whyiug/her-hack-astron-3-safe-schedule
+  - https://zhuanlan.zhihu.com/p/2073156935742907338
 ---
 
 # 一句话安全改调度：先备份工作流定义，再验收到真实 SUCCESS
@@ -22,28 +22,29 @@ channels:
 - **DolphinScheduler**: 3.2.2 官方 standalone，本地合成数据，仅监听 loopback
 - **Workflow**: `extract_orders → build_report → quality_gate`，三个无业务数据的 SHELL 节点
 
-在正式变更前，我独立跑过一次基线：schedule 1 为 `0 0 6 * * ? *` / `ONLINE`，流程实例和三个任务均为 `SUCCESS`。
+在正式变更前，我用一次独立的 Claude Code 运行建立基线：`ds_set_schedule` 返回 schedule 1、cron `0 0 6 * * ? *`，随后 `ds_online_schedule` 返回 `ONLINE`；同轮流程实例和三个任务均为 `SUCCESS`。这段基线的脱敏工具记录也一并收录在证据包中。
 
 ## What happened
 
 我给 Claude Code 的请求只有一句，但把安全边界和验收标准写清楚了：
 
-> 把 `her_hack3_safe_ops` 项目里 code 为 `181725658907584` 的 `daily_ops_report` 从每天 06:00 安全改成每个工作日 07:00：这是高风险变更，请先克隆一个名为 `daily_ops_report_recovery_20260817` 的离线恢复点并确认它存在，再把原 schedule 1 更新为 Quartz cron `0 0 7 ? * MON-FRI *` 且保持 ONLINE，随后手动触发原工作流并轮询最新流程实例及其任务，只有流程进入 SUCCESS 且三项任务全为 SUCCESS 才算完成，submitted 或 RUNNING 都不能算成功，不要删除任何对象，也不要调用 raw API。
+> 把 her_hack3_safe_ops 项目里 code 为 181725658907584 的 daily_ops_report 从每天 06:00 安全改成每个工作日 07:00：这是高风险变更，请先克隆一个名为 daily_ops_report_recovery_20260817 的离线恢复点并确认它存在，再把原 schedule 1 更新为 Quartz cron `0 0 7 ? * MON-FRI *` 且保持 ONLINE，随后手动触发原工作流并轮询最新流程实例及其任务，只有流程进入 SUCCESS 且 extract_orders、build_report、quality_gate 三项全为 SUCCESS 才算完成，submitted 或 RUNNING 都不能算成功，不要删除任何对象，也不要调用 raw API。
 
 这里的“恢复点”是当时请求中的原话。按工具的真实语义，它只是离线的工作流定义副本，不是 schedule 快照，也不包含旧 cron。
 
-下面的主图由 Claude Code 的真实 `stream-json` 事件自动生成并脱敏，不是手工编写的对话截图。原始事件 SHA-256、逐项 MCP 参数和结果可在 [`evidence/evidence.json`](evidence/evidence.json) 中核对，生成方式见 [`scripts/render_evidence.py`](scripts/render_evidence.py)。
+下面的主图由基线和正式变更两段 Claude Code 真实 `stream-json` 事件自动生成并脱敏，不是手工编写的对话截图，也不冒充 Claude Code 原生 TUI。两份原始文件的 SHA-256（用于和作者保留的原文件核对）、逐项 MCP 参数和结果均收录在 [`evidence/evidence.json`](evidence/evidence.json)，生成方式见 [`scripts/render_evidence.py`](scripts/render_evidence.py)。
 
 ![Claude Code request, MCP tool calls, and verified results](preview.png)
 
 智能体的执行链如下：
 
-1. `ds_get_workflow` 确认原工作流；调度基线来自正式变更前的独立检查。本轮 `ds_list_schedules` 事件没有返回可用结果，因此不把它作为基线证据。
-2. `ds_clone_workflow(auto_online=false)` 创建工作流定义副本；`ds_list_workflows` 再次确认其为 `OFFLINE`。
-3. `ds_update_schedule_cron(auto_online=true)` 将 cron 更新为工作日 07:00，并在更新后重新上线。
-4. `ds_run_workflow` 返回 `submitted` 后继续查询，而不是提前宣布成功。
-5. 最新实例先处于 `RUNNING_EXECUTION`；`ds_list_task_instances` 随后显示三项任务均为 `SUCCESS`。
-6. 最后一次 `ds_list_process_instances` 确认流程实例 id 2 也进入 `SUCCESS`。
+1. 独立基线运行先由 `ds_set_schedule` 建立每天 06:00 的 schedule 1，再由 `ds_online_schedule` 上线；同轮 `ds_list_schedules` 的 tool result 没有文本内容，因此前态证据只取前两个工具的真实返回，不把空结果包装成证据。
+2. 正式变更运行由 `ds_get_workflow` 确认原工作流；该轮 `ds_list_schedules` 的 tool result 同样没有文本内容，也不用于证明前态。
+3. `ds_clone_workflow(auto_online=false)` 创建工作流定义副本；`ds_list_workflows` 再次确认其为 `OFFLINE`。
+4. `ds_update_schedule_cron(auto_online=true)` 将 cron 更新为工作日 07:00，并在更新后重新上线。
+5. `ds_run_workflow` 返回 `submitted` 后继续查询，而不是提前宣布成功。
+6. 最新实例先处于 `RUNNING_EXECUTION`；`ds_list_task_instances` 随后显示三项任务均为 `SUCCESS`。
+7. 最后一次 `ds_list_process_instances` 确认流程实例 id 2 也进入 `SUCCESS`。
 
 控制台给出了同一轮操作的第二组证据：
 
@@ -71,11 +72,12 @@ channels:
 
 ## Published post
 
-- <https://github.com/whyiug/her-hack-astron-3-safe-schedule>
+- <https://zhuanlan.zhihu.com/p/2073156935742907338>
 
 ## Notes / gotchas
 
 - **恢复边界**：`ds_clone_workflow` 复制的是工作流定义、任务和依赖关系，不包含 schedule。本案例没有演示自动调度回滚；如需回退，应把 schedule 1 重新更新为基线 cron `0 0 6 * * ? *`，保持 `ONLINE`，并再次验证终态。因此这里证明的是“工作流定义备份 + 调度变更 + 终态验收”，不是“副本能够恢复旧 cron”。
+- **证据边界**：两次 `ds_list_schedules` 都收到了 tool-result 事件，但其中没有文本内容；证据包据实记录为 `result_format: "empty"`、`result: null`、`is_error: false`，不把它们当作状态查询证据。06:00 / ONLINE 的前态来自独立基线运行中 `ds_set_schedule` 和 `ds_online_schedule` 的同一 schedule ID 成功返回，属于操作链证据而不是 read-back；07:00 / ONLINE 的后态来自正式变更运行中 `ds_update_schedule_cron` 的返回及控制台截图。两次非交互 Claude Code 会话没有持久化，无法通过 `--resume` 还原原生 TUI；因此主图明确标注为原始事件摘要，完整脱敏工具记录和两份源文件哈希用于审计。
 - DolphinScheduler 3.2.2 对 task definition 要求显式的 `isCache`。当前版本的 `ds_create_dag_workflow` 初始化这组练习数据时返回 `request parameter {0} is not valid`；服务端调用栈显示缺失值在任务关系转换中触发空指针。为保持叙述诚实，我只在**测试数据初始化**阶段通过 raw API 补了 `isCache=NO`，核心的一句话变更未使用 raw API。
 - `ds_run_workflow` 的 `submitted` 只是受理状态。可靠闭环需要继续轮询 task instance 和 process instance，直到两层都进入真实终态。
 - 所有内容均来自本地合成实例；认证头从未进入提交材料，私网地址和运行路径已由渲染脚本替换。控制台截图只做了确定性隐私处理：裁去顶部登录区，并把任务执行用户替换为 `<redacted>`；cron、状态和时间等证据字段未改动。

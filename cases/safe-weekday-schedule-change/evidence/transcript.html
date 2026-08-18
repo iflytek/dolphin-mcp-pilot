@@ -3,36 +3,49 @@
 <style>
 *{box-sizing:border-box} body{margin:0;background:#07111f;color:#e6edf7;font:18px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
 .wrap{width:1680px;margin:0 auto;padding:42px} h1{font:700 34px/1.2 system-ui;margin:0 0 8px;color:#fff}
-.meta{color:#8da2bb;font-size:15px;margin-bottom:24px} .prompt{background:#10243d;border-left:5px solid #45a3ff;padding:18px 22px;border-radius:10px;margin-bottom:22px}
+.meta{color:#8da2bb;font-size:15px;margin-bottom:18px} .prompt{background:#10243d;border-left:5px solid #45a3ff;padding:18px 22px;border-radius:10px;margin-bottom:18px}
+.baseline{background:#132136;border:1px solid #36516f;border-radius:12px;padding:16px 20px;margin-bottom:18px}
+.baseline-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px} .note{color:#8da2bb;font-size:14px;margin-top:10px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px} .card{background:#0d1b2d;border:1px solid #263d58;border-radius:12px;padding:18px 20px;min-height:235px}
 .tool{color:#63b3ff;font-weight:700;margin-bottom:10px} pre{white-space:pre-wrap;word-break:break-word;margin:8px 0 0;color:#c9d7e8;font-size:15px}
 .ok{color:#59d98e;font-weight:700} .warn{color:#ffc96b} .badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
 .badge{background:#123628;color:#8df0b1;border:1px solid #286849;padding:7px 10px;border-radius:999px;font-size:14px}
 .footer{margin-top:20px;color:#8da2bb;font-size:14px}
 </style></head><body><main class="wrap">
-<h1>Claude Code × dolphin-mcp-pilot：真实 MCP 事件摘录</h1>
-<div class="meta">由 stream-json 原始日志自动生成并脱敏 · SHA-256 7bf0428549504d5d435ce5dfe948d2fa4f4cee1dfcf78ae42e2bf244c3294ad8</div>
-<div class="prompt"><b>自然语言请求</b><br>把 her_hack3_safe_ops 项目里 code 为 181725658907584 的 daily_ops_report 从每天 06:00 安全改成每个工作日 07:00：这是高风险变更，请先克隆一个名为 daily_ops_report_recovery_20260817 的离线恢复点并确认它存在，再把原 schedule 1 更新为 Quartz cron `0 0 7 ? * MON-FRI *` 且保持 ONLINE，随后手动触发原工作流并轮询最新流程实例及其任务，只有流程进入 SUCCESS 且 extract_orders、build_report、quality_gate 三项全为 SUCCESS 才算完成，submitted 或 RUNNING 都不能算成功，不要删除任何对象，也不要调用 raw API。</div>
+<h1>Claude Code × dolphin-mcp-pilot：真实 MCP 事件证据</h1>
+<div class="meta">由两段 stream-json 原始日志自动生成并脱敏<br>基线 SHA-256 589982a15322176155937e0bae38da7fb0cff5db104bce469112304165fbc0df · 变更 SHA-256 7bf0428549504d5d435ce5dfe948d2fa4f4cee1dfcf78ae42e2bf244c3294ad8</div>
+<div class="baseline"><div class="tool">变更前独立基线</div><div class="baseline-grid">
+<div><div class="ok">① ds_set_schedule：每天 06:00</div><pre>{
+  &quot;schedule_id&quot;: 1,
+  &quot;cron&quot;: &quot;0 0 6 * * ? *&quot;,
+  &quot;releaseState&quot;: &quot;OFFLINE&quot;
+}</pre></div>
+<div><div class="ok">② ds_online_schedule：上线 schedule 1</div><pre>{
+  &quot;schedule_id&quot;: 1,
+  &quot;status&quot;: &quot;ONLINE&quot;
+}</pre></div>
+</div><div class="note">同轮 ds_list_schedules 的 tool_result 无文本内容，因此前态只取自上述两个真实工具返回，不把空结果包装成证据。</div></div>
+<div class="prompt"><b>正式变更请求</b><br>把 her_hack3_safe_ops 项目里 code 为 181725658907584 的 daily_ops_report 从每天 06:00 安全改成每个工作日 07:00：这是高风险变更，请先克隆一个名为 daily_ops_report_recovery_20260817 的离线恢复点并确认它存在，再把原 schedule 1 更新为 Quartz cron `0 0 7 ? * MON-FRI *` 且保持 ONLINE，随后手动触发原工作流并轮询最新流程实例及其任务，只有流程进入 SUCCESS 且 extract_orders、build_report、quality_gate 三项全为 SUCCESS 才算完成，submitted 或 RUNNING 都不能算成功，不要删除任何对象，也不要调用 raw API。</div>
 <section class="grid">
-<article class="card"><div class="tool">① ds_clone_workflow</div><div class="ok">备份工作流定义（不含 schedule）</div><pre>{
+<article class="card"><div class="tool">③ ds_clone_workflow</div><div class="ok">备份工作流定义（不含 schedule）</div><pre>{
   &quot;success&quot;: true,
   &quot;workflow_code&quot;: 181725769057216,
   &quot;name&quot;: &quot;daily_ops_report_recovery_20260817&quot;,
   &quot;task_count&quot;: 3,
   &quot;release&quot;: &quot;OFFLINE&quot;
 }</pre></article>
-<article class="card"><div class="tool">② ds_update_schedule_cron</div><div class="ok">变更后自动恢复 ONLINE</div><pre>{
+<article class="card"><div class="tool">④ ds_update_schedule_cron</div><div class="ok">变更后自动恢复 ONLINE</div><pre>{
   &quot;schedule_id&quot;: 1,
   &quot;new_cron&quot;: &quot;0 0 7 ? * MON-FRI *&quot;,
   &quot;release_state&quot;: &quot;ONLINE&quot;,
   &quot;status&quot;: &quot;updated&quot;,
   &quot;online_retry_detail&quot;: &quot;Re-activated successfully (attempt 1)&quot;
 }</pre></article>
-<article class="card"><div class="tool">③ ds_run_workflow</div><div class="warn">submitted 只代表已提交，继续轮询</div><pre>{
+<article class="card"><div class="tool">⑤ ds_run_workflow</div><div class="warn">submitted 只代表已提交，继续轮询</div><pre>{
   &quot;status&quot;: &quot;submitted&quot;,
   &quot;workflow_code&quot;: 181725658907584
 }</pre></article>
-<article class="card"><div class="tool">④ ds_list_task_instances → ds_list_process_instances</div><div class="ok">任务与流程均到达真实终态</div><div class="badges"><span class="badge"><b>quality_gate</b> SUCCESS</span><span class="badge"><b>build_report</b> SUCCESS</span><span class="badge"><b>extract_orders</b> SUCCESS</span></div><pre>{
+<article class="card"><div class="tool">⑥ ds_list_task_instances → ds_list_process_instances</div><div class="ok">任务与流程均到达真实终态</div><div class="badges"><span class="badge"><b>quality_gate</b> SUCCESS</span><span class="badge"><b>build_report</b> SUCCESS</span><span class="badge"><b>extract_orders</b> SUCCESS</span></div><pre>{
   &quot;id&quot;: 2,
   &quot;name&quot;: &quot;daily_ops_report-1-20260817001623445&quot;,
   &quot;state&quot;: &quot;SUCCESS&quot;,
@@ -40,5 +53,5 @@
   &quot;endTime&quot;: &quot;2026-08-17 00:16:29&quot;
 }</pre></article>
 </section>
-<div class="footer">未展示认证头；私有地址、运行目录已替换。完整脱敏事件见 evidence.json。</div>
+<div class="footer">证据摘要图（非 Claude TUI 截图）· 未展示认证头；私有地址、运行目录已替换。完整脱敏工具记录见 evidence.json。</div>
 </main></body></html>
