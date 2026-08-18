@@ -178,7 +178,7 @@ def render_html(bundle: dict[str, object], output: Path) -> None:
 <div class="meta">由 stream-json 原始日志自动生成并脱敏 · SHA-256 {bundle["source_sha256"]}</div>
 <div class="prompt"><b>自然语言请求</b><br>{html.escape(str(bundle["prompt"]))}</div>
 <section class="grid">
-<article class="card"><div class="tool">① ds_clone_workflow</div><div class="ok">先建立 OFFLINE 恢复点</div><pre>{code(compact_result(clone))}</pre></article>
+<article class="card"><div class="tool">① ds_clone_workflow</div><div class="ok">备份工作流定义（不含 schedule）</div><pre>{code(compact_result(clone))}</pre></article>
 <article class="card"><div class="tool">② ds_update_schedule_cron</div><div class="ok">变更后自动恢复 ONLINE</div><pre>{code(compact_result(schedule))}</pre></article>
 <article class="card"><div class="tool">③ ds_run_workflow</div><div class="warn">submitted 只代表已提交，继续轮询</div><pre>{code(compact_result(submitted))}</pre></article>
 <article class="card"><div class="tool">④ ds_list_task_instances → ds_list_process_instances</div><div class="ok">任务与流程均到达真实终态</div><div class="badges">{task_badges}</div><pre>{code(compact_result(terminal))}</pre></article>

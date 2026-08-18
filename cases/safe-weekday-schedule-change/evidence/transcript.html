@@ -14,7 +14,7 @@
 <div class="meta">由 stream-json 原始日志自动生成并脱敏 · SHA-256 7bf0428549504d5d435ce5dfe948d2fa4f4cee1dfcf78ae42e2bf244c3294ad8</div>
 <div class="prompt"><b>自然语言请求</b><br>把 her_hack3_safe_ops 项目里 code 为 181725658907584 的 daily_ops_report 从每天 06:00 安全改成每个工作日 07:00：这是高风险变更，请先克隆一个名为 daily_ops_report_recovery_20260817 的离线恢复点并确认它存在，再把原 schedule 1 更新为 Quartz cron `0 0 7 ? * MON-FRI *` 且保持 ONLINE，随后手动触发原工作流并轮询最新流程实例及其任务，只有流程进入 SUCCESS 且 extract_orders、build_report、quality_gate 三项全为 SUCCESS 才算完成，submitted 或 RUNNING 都不能算成功，不要删除任何对象，也不要调用 raw API。</div>
 <section class="grid">
-<article class="card"><div class="tool">① ds_clone_workflow</div><div class="ok">先建立 OFFLINE 恢复点</div><pre>{
+<article class="card"><div class="tool">① ds_clone_workflow</div><div class="ok">备份工作流定义（不含 schedule）</div><pre>{
   &quot;success&quot;: true,
   &quot;workflow_code&quot;: 181725769057216,
   &quot;name&quot;: &quot;daily_ops_report_recovery_20260817&quot;,
