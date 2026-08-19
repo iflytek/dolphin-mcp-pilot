@@ -15,10 +15,27 @@
 
 """Monitoring tools."""
 
+import urllib.error
+
 from mcp.server.mcpserver import MCPServer
 
 from ..client import ds_get
 from ..utils import require_ok
+
+
+def _list_servers(node_type: str) -> list:
+    """List registry nodes of one type, across DolphinScheduler lines.
+
+    DS >= 3.2.2 serves ``/monitor/{RegistryNodeType}`` (``MASTER`` / ``WORKER``);
+    3.2.1 and older only expose ``/monitor/masters`` and ``/monitor/workers``.
+    Try the current path first and fall back when the server does not know it.
+    """
+    try:
+        result = ds_get(f"/monitor/{node_type}")
+    except urllib.error.HTTPError:
+        result = ds_get(f"/monitor/{node_type.lower()}s")
+    require_ok(result, f"get {node_type.lower()} status")
+    return result.get("data", []) or []
 
 
 def register_monitor_tools(mcp: MCPServer):
@@ -27,13 +44,9 @@ def register_monitor_tools(mcp: MCPServer):
     @mcp.tool()
     def ds_monitor_masters() -> list:
         """Check DS master node status (verify scheduler is alive)."""
-        result = ds_get("/monitor/MASTER")
-        require_ok(result, "get master status")
-        return result.get("data", []) or []
+        return _list_servers("MASTER")
 
     @mcp.tool()
     def ds_monitor_workers() -> list:
         """Check DS worker node status (verify task executors are alive)."""
-        result = ds_get("/monitor/WORKER")
-        require_ok(result, "get worker status")
-        return result.get("data", []) or []
+        return _list_servers("WORKER")
