@@ -6,8 +6,8 @@ category: incident-firefighting  # 主类别：故障救火；融合 workflow-cr
 host: 腾讯云轻量（首尔） + dolphin-mcp-pilot HTTP mode
 testedWith: dolphin-mcp-pilot 0.3.0
 channels:
-  - https://juejin.cn/REPLACE_ME  # TODO: 发帖后回填真实链接
-  - https://blog.csdn.net/REPLACE_ME
+  - https://juejin.cn/post/7676295909912346633  # 掘金已发布
+  # - https://blog.csdn.net/REPLACE_ME  # CSDN 待发布（可选）
 ---
 
 # 凌晨三点，我一句话让 AI 接管了 DolphinScheduler 救火
@@ -55,6 +55,12 @@ channels:
 ![失败 → 成功：实例 #5 FAILURE 与 #6 SUCCESS 同屏对比](30-v2-instances.png)
 *DS 实例页实测截图：fire-drill-v2 实例 #5（FAILURE）与 #6（SUCCESS）同屏，状态变更一目了然*
 
+**完整救火过程录屏**（32 秒，真实调用非摆拍）：
+
+![救火全流程录屏：自然语言请求 → 工具调用 → 恢复成功](demo-firefight.gif)
+
+*从「自然语言请求」到 `ds_list_process_instances` 定位 → `ds_get_latest_failure_log` 看日志 → `ds_update_task_param` 修复 → `ds_run_workflow` 重跑 → SUCCESS 验证，全程真实 MCP 调用链。*
+
 ### 场景二：一句话建日报工作流（workflow creation）
 
 **自然语言请求**：
@@ -78,8 +84,8 @@ channels:
 
 ## Published post
 
-- 掘金：<https://juejin.cn/REPLACE_ME>
-- CSDN：<https://blog.csdn.net/REPLACE_ME>
+- 掘金：<https://juejin.cn/post/7676295909912346633>
+- CSDN：待发布（可选）
 
 ## Notes / gotchas
 
