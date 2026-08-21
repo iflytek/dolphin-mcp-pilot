@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MCP 2026-07-28 stateless protocol support through the MCP Python SDK 2.x.
 - CI compatibility coverage for both an MCP 1.29 legacy client and an MCP 2.0
   client against the same HTTP server.
+- `DS_API_STYLE` setting (`auto` / `process` / `workflow`) selecting the
+  DolphinScheduler REST path spelling, with runtime auto-detection by default.
 
 ### Changed
 
@@ -26,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Compatibility with DolphinScheduler 3.3.0+, which renamed the
+  `process-definition` / `process-instances` REST path segments to
+  `workflow-definition` / `workflow-instances`. Requests are now rewritten to
+  the target version's spelling instead of failing with 404 on 3.3.x/3.4.x.
 - Request authentication context is now restored after every HTTP request so
   credentials cannot carry over to a later unauthenticated request.
 

@@ -20,12 +20,56 @@ from __future__ import annotations
 import json
 import mimetypes
 import os
+import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
 
-from .config import get_ds_url
+from . import api_compat
+from .config import get_ds_api_style, get_ds_url
 from .auth import login
+
+# Cached result of API-path-style auto-detection (see _effective_api_style).
+_resolved_api_style: str | None = None
+
+
+def _detect_api_style() -> str:
+    """Probe the target DolphinScheduler for its REST path style.
+
+    DS 3.3.0+ exposes the ``workflow-definition`` controller; 3.2.x does not.
+    A bogus project code is enough — we only care whether the route exists.
+    Detection falls back to the legacy ``"process"`` spelling whenever the
+    probe is inconclusive, so an undetectable deployment never regresses.
+    """
+    try:
+        ds_api_request(
+            "GET",
+            "/projects/0/workflow-definition/simple-list",
+            _resolve=False,
+        )
+        return "workflow"
+    except urllib.error.HTTPError as exc:
+        # 404 => controller absent (legacy). 401/403/5xx => inconclusive;
+        # keep the legacy default rather than guessing.
+        return "process" if exc.code == 404 else "process"
+    except Exception:
+        return "process"
+
+
+def _effective_api_style() -> str:
+    """Return the path style to apply, detecting once when set to ``auto``."""
+    global _resolved_api_style
+    configured = get_ds_api_style()
+    if configured != "auto":
+        return configured
+    if _resolved_api_style is None:
+        _resolved_api_style = _detect_api_style()
+    return _resolved_api_style
+
+
+def _resolve_path(path: str) -> str:
+    """Rewrite legacy DS path segments for the target version when needed."""
+    return api_compat.apply_style(path, _effective_api_style())
 
 
 def ds_api_request(
@@ -34,6 +78,7 @@ def ds_api_request(
     data: dict | None = None,
     json_body: dict | None = None,
     timeout: int | None = None,
+    _resolve: bool = True,
 ) -> dict:
     """发送 HTTP 请求到 DolphinScheduler API
 
@@ -47,6 +92,8 @@ def ds_api_request(
     Returns:
         API 响应的 JSON 数据
     """
+    if _resolve:
+        path = _resolve_path(path)
     url = get_ds_url()
     sid = login()
     full_url = f"{url}{path}"
@@ -162,6 +209,7 @@ def _multipart_request(
     fields: dict | None = None,
     files: dict | None = None,
 ) -> dict:
+    path = _resolve_path(path)
     url = get_ds_url()
     sid = login()
     full_url = f"{url}{path}"
@@ -189,6 +237,7 @@ def ds_download_bytes(path: str) -> bytes:
     Returns:
         原始响应字节
     """
+    path = _resolve_path(path)
     url = get_ds_url()
     sid = login()
     full_url = f"{url}{path}"
