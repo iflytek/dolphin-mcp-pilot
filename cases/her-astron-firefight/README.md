@@ -1,7 +1,7 @@
 ---
 title: 凌晨三点，我一句话让 AI 接管了 DolphinScheduler 救火
 author: yanhappybird
-date: 2026-08-22                 # 发帖日（计划）
+date: 2026-08-21                 # 掘金实际发布日
 category: incident-firefighting  # 主类别：故障救火；融合 workflow-creation
 host: 腾讯云轻量（首尔） + dolphin-mcp-pilot HTTP mode
 testedWith: dolphin-mcp-pilot 0.3.0
