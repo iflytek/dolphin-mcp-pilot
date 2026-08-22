@@ -7,7 +7,8 @@ host: 腾讯云轻量（首尔） + dolphin-mcp-pilot HTTP mode
 testedWith: dolphin-mcp-pilot 0.3.0
 channels:
   - https://juejin.cn/post/7676295909912346633  # 掘金已发布
-  # - https://blog.csdn.net/REPLACE_ME  # CSDN 待发布（可选）
+  - https://zhuanlan.zhihu.com/p/2074681996090070219  # 知乎已发布
+  # - https://blog.csdn.net/REPLACE_ME  # CSDN 待审核通过后回填（可选）
 ---
 
 # 凌晨三点，我一句话让 AI 接管了 DolphinScheduler 救火
@@ -85,7 +86,8 @@ channels:
 ## Published post
 
 - 掘金：<https://juejin.cn/post/7676295909912346633>
-- CSDN：待发布（可选）
+- 知乎：<https://zhuanlan.zhihu.com/p/2074681996090070219>
+- CSDN：待审核通过后回填（可选）
 
 ## Notes / gotchas
 
