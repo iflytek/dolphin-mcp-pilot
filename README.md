@@ -15,6 +15,10 @@ A production-ready MCP server for Apache DolphinScheduler.
 
 **dolphin-mcp-pilot** exposes **53+ tools** for projects, workflows, DAG creation, schedules, instances, resources, logs, monitoring and raw API passthrough — designed for AI agents that need to operate DolphinScheduler beyond basic read-only usage.
 
+> **Compatibility target:** DolphinScheduler 3.x broadly. Automated Docker Compose E2E currently
+> runs against the 3.4.x standalone image; monitor endpoint differences inside the 3.2 line are
+> covered by fallback behavior.
+
 ## 🎯 Why this project?
 
 Most public DolphinScheduler MCP servers only cover basic read/list/start/stop scenarios.

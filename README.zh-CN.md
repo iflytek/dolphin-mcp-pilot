@@ -14,6 +14,9 @@ Apache DolphinScheduler 的生产级 MCP 服务器。
 
 **dolphin-mcp-pilot** 提供 **53+ 工具**，覆盖项目管理、工作流、DAG 创建、调度、实例、资源、日志、监控以及原始 API 透传 —— 专为需要超越只读操作的 AI Agent 设计。
 
+> **兼容目标：**覆盖 DolphinScheduler 3.x。自动化 Docker Compose E2E 当前固定使用
+> 3.4.x standalone 镜像；3.2 系列内部的监控接口差异已通过兼容回退处理。
+
 ## 🎯 为什么需要这个项目？
 
 目前公开的 DolphinScheduler MCP 服务器大多只覆盖基础的读/列/启停场景。
