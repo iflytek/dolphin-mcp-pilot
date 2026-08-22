@@ -1,0 +1,42 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.iflytek/dolphin-mcp-pilot",
+  "description": "Operate Apache DolphinScheduler from AI agents via MCP — 58 tools for DAG/SQL workflow creation, schedule management, instance control, serial backfills with ordering guarantees, guided troubleshooting with next_action hints, resource operations, and version rollback.",
+  "version": "0.3.0",
+  "repository": {
+    "url": "https://github.com/iflytek/dolphin-mcp-pilot",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/iflytek/dolphin-mcp-pilot:0.3.0",
+      "transport": {
+        "type": "streamable-http"
+      },
+      "env": [
+        {
+          "name": "DS_URL",
+          "description": "DolphinScheduler API base URL (e.g. http://localhost:12345/dolphinscheduler)",
+          "isRequired": true
+        },
+        {
+          "name": "DS_TOKEN",
+          "description": "DolphinScheduler API token (leave empty to use DS_USER/DS_PASSWORD instead)"
+        },
+        {
+          "name": "DS_USER",
+          "description": "DolphinScheduler username (alternative to DS_TOKEN)"
+        },
+        {
+          "name": "DS_PASSWORD",
+          "description": "DolphinScheduler password (used with DS_USER)"
+        },
+        {
+          "name": "DS_TENANT_CODE",
+          "description": "Tenant code (default: 'default')"
+        }
+      ]
+    }
+  ]
+}

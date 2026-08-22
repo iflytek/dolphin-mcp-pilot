@@ -1,0 +1,78 @@
+# =============================================================================
+# Publish server.json to MCP Registry on release
+# =============================================================================
+# Triggers on:
+#   - New tag push (vX.Y.Z)
+#   - Manual workflow_dispatch with version input
+#
+# Prerequisites:
+#   - ghcr.io/iflytek/dolphin-mcp-pilot:{version} must exist (built by release.yml)
+#   - GitHub token with read:org scope (auto-provided by GITHUB_TOKEN)
+#
+# Registry docs: https://github.com/modelcontextprotocol/registry
+# =============================================================================
+
+name: Publish to MCP Registry
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g. 0.2.0, without v prefix)'
+        required: true
+        type: string
+
+jobs:
+  publish-registry:
+    name: Publish server.json to registry.modelcontextprotocol.io
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"  # strip 'v' prefix from tag
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
+
+      - name: Update server.json version and OCI tag
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          # Update version field
+          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" server.json
+          # Update OCI identifier tag
+          sed -i "s|ghcr.io/iflytek/dolphin-mcp-pilot:[^\"]*|ghcr.io/iflytek/dolphin-mcp-pilot:$VERSION|" server.json
+          echo "Updated server.json:"
+          cat server.json
+
+      - name: Install mcp-publisher CLI
+        run: |
+          # Official install via Homebrew (Ubuntu runner has brew)
+          brew install mcp-publisher
+          mcp-publisher --version
+
+      - name: Authenticate with MCP Registry
+        run: |
+          # Use GitHub token for namespace io.github.iflytek/*
+          # --token flag uses non-interactive auth suitable for CI
+          mcp-publisher login github \
+            --token "${{ secrets.GITHUB_TOKEN }}" \
+            --registry https://registry.modelcontextprotocol.io
+
+      - name: Publish to registry
+        run: |
+          mcp-publisher publish server.json
+          echo "Published io.github.iflytek/dolphin-mcp-pilot@${{ steps.version.outputs.VERSION }}"
+          echo "View at: https://registry.modelcontextprotocol.io/servers/io.github.iflytek/dolphin-mcp-pilot"
