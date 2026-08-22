@@ -1,0 +1,6 @@
+.env
+.mcp*.json
+.ruff_cache/
+.venv/
+__pycache__/
+*.pyc
