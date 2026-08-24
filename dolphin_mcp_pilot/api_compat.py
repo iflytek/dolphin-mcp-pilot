@@ -38,9 +38,6 @@ SEGMENT_MAP = {
     "process-instances": "workflow-instances",
 }
 
-# The DolphinScheduler release that renamed the segments above.
-WORKFLOW_STYLE_SINCE = (3, 3, 0)
-
 VALID_STYLES = ("auto", "process", "workflow")
 
 
@@ -76,41 +73,3 @@ def apply_style(path: str, style: str) -> str:
 
     segments = [SEGMENT_MAP.get(segment, segment) for segment in base.split("/")]
     return "/".join(segments) + suffix
-
-
-def style_for_version(version: tuple[int, ...] | None) -> str | None:
-    """Map a parsed version tuple to a path style.
-
-    Returns ``"workflow"`` for >= 3.3.0, ``"process"`` for older releases, and
-    ``None`` when the version is unknown (so the caller can try another signal).
-    """
-    if not version:
-        return None
-    return "workflow" if tuple(version[:3]) >= WORKFLOW_STYLE_SINCE else "process"
-
-
-def parse_version(text: str | None) -> tuple[int, ...] | None:
-    """Extract a leading ``MAJOR.MINOR[.PATCH]`` version from free-form text.
-
-    Tolerates suffixes like ``3.3.2-release`` or ``v3.4.1``. Returns ``None``
-    when no dotted numeric version is present.
-    """
-    if not text:
-        return None
-
-    cleaned = str(text).strip().lstrip("vV")
-    digits: list[int] = []
-    for part in cleaned.split(".")[:3]:
-        number = ""
-        for char in part:
-            if char.isdigit():
-                number += char
-            else:
-                break
-        if not number:
-            break
-        digits.append(int(number))
-
-    if len(digits) < 2:
-        return None
-    return tuple(digits)

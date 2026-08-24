@@ -68,29 +68,8 @@ class TestApplyStyle(unittest.TestCase):
         self.assertEqual(api_compat.apply_style("", "workflow"), "")
 
 
-class TestVersionHelpers(unittest.TestCase):
-    """Version parsing and style mapping."""
-
-    def test_parse_plain_version(self):
-        self.assertEqual(api_compat.parse_version("3.3.2"), (3, 3, 2))
-
-    def test_parse_version_with_suffix(self):
-        self.assertEqual(api_compat.parse_version("v3.4.1-release"), (3, 4, 1))
-
-    def test_parse_two_component_version(self):
-        self.assertEqual(api_compat.parse_version("3.2"), (3, 2))
-
-    def test_parse_garbage_returns_none(self):
-        self.assertIsNone(api_compat.parse_version("not-a-version"))
-        self.assertIsNone(api_compat.parse_version(None))
-
-    def test_style_for_version_cutover(self):
-        self.assertEqual(api_compat.style_for_version((3, 2, 2)), "process")
-        self.assertEqual(api_compat.style_for_version((3, 3, 0)), "workflow")
-        self.assertEqual(api_compat.style_for_version((3, 4, 1)), "workflow")
-
-    def test_style_for_unknown_version(self):
-        self.assertIsNone(api_compat.style_for_version(None))
+class TestNormalizeStyle(unittest.TestCase):
+    """Configured-style normalisation."""
 
     def test_normalize_style(self):
         self.assertEqual(api_compat.normalize_style("WORKFLOW"), "workflow")
@@ -149,12 +128,39 @@ class TestClientStyleResolution(unittest.TestCase):
         with patch.object(client, "ds_api_request", side_effect=err):
             self.assertEqual(client._detect_api_style(), "process")
 
-    def test_detect_falls_back_to_process_on_other_errors(self):
+    def test_detect_returns_workflow_on_403(self):
+        # 403 means the route resolved but denied us -> the controller exists.
         err = urllib.error.HTTPError("u", 403, "forbidden", None, None)
         with patch.object(client, "ds_api_request", side_effect=err):
-            self.assertEqual(client._detect_api_style(), "process")
-        with patch.object(client, "ds_api_request", side_effect=OSError("boom")):
-            self.assertEqual(client._detect_api_style(), "process")
+            self.assertEqual(client._detect_api_style(), "workflow")
+
+    def test_detect_returns_none_when_inconclusive(self):
+        # 401 / 5xx / network errors are inconclusive: no confident verdict.
+        for err in (
+            urllib.error.HTTPError("u", 401, "unauthorized", None, None),
+            urllib.error.HTTPError("u", 502, "bad gateway", None, None),
+            OSError("timeout"),
+        ):
+            with patch.object(client, "ds_api_request", side_effect=err):
+                self.assertIsNone(client._detect_api_style())
+
+    def test_inconclusive_probe_is_not_cached(self):
+        # A transient failure must not stick the tool on the legacy paths for
+        # the whole process lifetime; the next call re-probes and self-heals.
+        with patch.object(config, "DS_API_STYLE", "auto"):
+            with patch.object(
+                client, "_detect_api_style", side_effect=[None, "workflow"]
+            ) as detect:
+                self.assertEqual(
+                    client._resolve_path("/projects/x/process-definition"),
+                    "/projects/x/process-definition",
+                )
+                self.assertIsNone(client._resolved_api_style)
+                self.assertEqual(
+                    client._resolve_path("/projects/x/process-definition"),
+                    "/projects/x/workflow-definition",
+                )
+                self.assertEqual(detect.call_count, 2)
 
 
 if __name__ == "__main__":

@@ -33,13 +33,17 @@ from .auth import login
 _resolved_api_style: str | None = None
 
 
-def _detect_api_style() -> str:
+def _detect_api_style() -> str | None:
     """Probe the target DolphinScheduler for its REST path style.
 
     DS 3.3.0+ exposes the ``workflow-definition`` controller; 3.2.x does not.
     A bogus project code is enough — we only care whether the route exists.
-    Detection falls back to the legacy ``"process"`` spelling whenever the
-    probe is inconclusive, so an undetectable deployment never regresses.
+
+    Returns a confident ``"workflow"`` / ``"process"`` verdict, or ``None`` when
+    the probe is inconclusive (the session was rejected, a proxy returned 5xx,
+    the request timed out). ``None`` must not be cached: a single unlucky probe
+    at startup should not stick the tool on the wrong path family for the whole
+    process lifetime.
     """
     try:
         ds_api_request(
@@ -47,24 +51,37 @@ def _detect_api_style() -> str:
             "/projects/0/workflow-definition/simple-list",
             _resolve=False,
         )
+        # 2xx: the workflow controller answered -> 3.3.0+.
         return "workflow"
     except urllib.error.HTTPError as exc:
-        # 404 => controller absent (legacy). 401/403/5xx => inconclusive;
-        # keep the legacy default rather than guessing.
-        return "process" if exc.code == 404 else "process"
+        if exc.code == 404:
+            # Route genuinely absent -> legacy 3.2.x spelling.
+            return "process"
+        if exc.code == 403:
+            # Route resolved but denied us -> the controller exists (3.3.0+).
+            return "workflow"
+        # 401 / 5xx / anything else: inconclusive, let the next call retry.
+        return None
     except Exception:
-        return "process"
+        # Network timeout, connection reset, decode error, etc.: inconclusive.
+        return None
 
 
 def _effective_api_style() -> str:
-    """Return the path style to apply, detecting once when set to ``auto``."""
+    """Return the path style to apply, detecting once when set to ``auto``.
+
+    Only a confident detection is cached. An inconclusive probe falls back to
+    the legacy ``"process"`` spelling for this one call but leaves the cache
+    unset, so the next request re-probes and detection can self-heal instead of
+    getting stuck on a transient startup failure.
+    """
     global _resolved_api_style
     configured = get_ds_api_style()
     if configured != "auto":
         return configured
     if _resolved_api_style is None:
         _resolved_api_style = _detect_api_style()
-    return _resolved_api_style
+    return _resolved_api_style or "process"
 
 
 def _resolve_path(path: str) -> str:
