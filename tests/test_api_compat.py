@@ -50,10 +50,35 @@ class TestApplyStyle(unittest.TestCase):
         path = "/projects/abc/process-instances"
         self.assertEqual(api_compat.apply_style(path, "auto"), path)
 
-    def test_does_not_touch_singular_start_process_instance(self):
-        # executors/start-process-instance is a different endpoint that was
-        # NOT renamed; the whole-segment match must leave it intact.
-        path = "/projects/abc/executors/start-process-instance"
+    def test_workflow_style_rewrites_start_process_instance(self):
+        # The executor trigger endpoint moved too in the 3.3 line
+        # (start-process-instance -> start-workflow-instance); the tool's
+        # run-workflow path 404s on 3.3.x unless this segment is rewritten.
+        self.assertEqual(
+            api_compat.apply_style(
+                "/projects/abc/executors/start-process-instance", "workflow"
+            ),
+            "/projects/abc/executors/start-workflow-instance",
+        )
+
+    def test_workflow_style_rewrites_batch_start_process_instance(self):
+        self.assertEqual(
+            api_compat.apply_style(
+                "/projects/abc/executors/batch-start-process-instance", "workflow"
+            ),
+            "/projects/abc/executors/batch-start-workflow-instance",
+        )
+
+    def test_does_not_touch_execute_control_endpoint(self):
+        # /executors/execute (STOP/PAUSE/rerun controls) was NOT renamed;
+        # only the start-* trigger endpoints moved.
+        path = "/projects/abc/executors/execute"
+        self.assertEqual(api_compat.apply_style(path, "workflow"), path)
+
+    def test_does_not_touch_process_instance_query_param(self):
+        # A mapped token appearing only as a query-param substring must be
+        # left alone; the query string is split off before segment matching.
+        path = "/projects/abc/executors/execute?processInstanceId=42"
         self.assertEqual(api_compat.apply_style(path, "workflow"), path)
 
     def test_does_not_touch_unrelated_segments(self):

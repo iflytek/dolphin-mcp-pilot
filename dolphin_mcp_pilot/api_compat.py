@@ -15,10 +15,18 @@
 
 """DolphinScheduler API path-compatibility helpers.
 
-DolphinScheduler renamed several REST path segments in 3.3.0:
+DolphinScheduler renamed several REST path segments in the 3.3 line
+(``process`` -> ``workflow``):
 
-    process-definition  ->  workflow-definition
-    process-instances   ->  workflow-instances
+    process-definition            ->  workflow-definition
+    process-instances             ->  workflow-instances
+    start-process-instance        ->  start-workflow-instance
+    batch-start-process-instance  ->  batch-start-workflow-instance
+
+The class-level controllers (``process-definition`` / ``process-instances``)
+and the executor trigger endpoints (``start-process-instance`` /
+``batch-start-process-instance``, under ``/executors``) all moved; the
+``/executors/execute`` control endpoint did *not*.
 
 The tool's call sites are written against the legacy ("process") spelling.
 This module rewrites those path segments to the ``workflow`` spelling when
@@ -31,11 +39,13 @@ in :mod:`dolphin_mcp_pilot.client`, which owns the HTTP/auth layer.
 
 from __future__ import annotations
 
-# Legacy (<= 3.2.x) path segment  ->  3.3.0+ path segment.
+# Legacy (<= 3.2.x) path segment  ->  3.3.x+ path segment.
 # Keyed on the *legacy* spelling because that is what the call sites emit.
 SEGMENT_MAP = {
     "process-definition": "workflow-definition",
     "process-instances": "workflow-instances",
+    "start-process-instance": "start-workflow-instance",
+    "batch-start-process-instance": "batch-start-workflow-instance",
 }
 
 VALID_STYLES = ("auto", "process", "workflow")
@@ -54,10 +64,12 @@ def normalize_style(value: str | None) -> str:
 def apply_style(path: str, style: str) -> str:
     """Rewrite legacy path segments to the ``workflow`` spelling when needed.
 
-    Only whole path segments are rewritten, and only the path portion before
-    any ``?`` query string is touched, so substrings such as
-    ``executors/start-process-instance`` (singular, a different endpoint that
-    was *not* renamed) are left intact.
+    Only whole ``/``-delimited path segments that appear verbatim in
+    :data:`SEGMENT_MAP` are rewritten, and only the path portion before any
+    ``?`` query string is touched. So a segment that was *not* renamed (e.g.
+    ``executors/execute``) is left intact, and a query parameter that merely
+    contains a mapped token as a substring (e.g. ``?processInstanceId=42``) is
+    never rewritten.
 
     The rewrite is a no-op for the ``process`` / ``auto`` styles and is
     idempotent for the ``workflow`` style.
