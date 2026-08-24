@@ -1,5 +1,6 @@
 # ---------- Stage 1: build dependencies into a self-contained venv ----------
 FROM python:3.12-slim AS builder
+LABEL io.modelcontextprotocol.server.name="io.github.iflytek/dolphin-mcp-pilot"
 
 ENV PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
