@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.iflytek/dolphin-mcp-pilot",
   "description": "Operate Apache DolphinScheduler from AI agents via MCP — 58 tools for DAG/SQL workflow creation, schedule management, instance control, serial backfills with ordering guarantees, guided troubleshooting with next_action hints, resource operations, and version rollback.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "repository": {
     "url": "https://github.com/iflytek/dolphin-mcp-pilot",
     "source": "github"
@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "oci",
-      "identifier": "ghcr.io/iflytek/dolphin-mcp-pilot:0.2.0",
+      "identifier": "ghcr.io/iflytek/dolphin-mcp-pilot:0.3.0",
       "transport": {
         "type": "streamable-http"
       },
