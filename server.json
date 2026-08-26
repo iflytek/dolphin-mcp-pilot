@@ -13,7 +13,7 @@
       "identifier": "ghcr.io/iflytek/dolphin-mcp-pilot:0.3.0",
       "transport": {
         "type": "streamable-http",
-        "url": "http://localhost:3000/mcp"
+        "url": "http://localhost:8001/mcp/"
       },
       "environmentVariables": [
         {
