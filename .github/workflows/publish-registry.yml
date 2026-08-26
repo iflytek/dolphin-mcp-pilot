@@ -1,36 +1,36 @@
 # =============================================================================
-# Publish server.json to the official MCP Registry
+# Publish server.json to the official MCP Registry -- MANUAL / RECOVERY path
 # =============================================================================
-# Triggers on:
-#   - New tag push (vX.Y.Z)
-#   - Manual workflow_dispatch with an explicit version
+# Tag-driven publication lives in release.yml, as a job gated on
+# `needs: build-and-push`. That ordering matters: publication requires
+# ghcr.io/iflytek/dolphin-mcp-pilot:<version> to already exist carrying the
+# io.modelcontextprotocol.server.name label, which is how the registry proves
+# ownership of io.github.iflytek/*. Triggering both workflows from the same tag
+# let GitHub schedule them concurrently, so publish could and did race the image
+# build.
 #
-# Prerequisites:
-#   - ghcr.io/iflytek/dolphin-mcp-pilot:{version} must exist (built by release.yml)
-#   - that image must carry the LABEL io.modelcontextprotocol.server.name,
-#     which is how the registry verifies ownership of io.github.iflytek/*
+# This workflow therefore keeps only the manual path, and verifies the same
+# prerequisite explicitly before publishing.
 #
-# Auth: GitHub OIDC. No PAT or long-lived secret is involved -- the default
-# GITHUB_TOKEN authenticates as github-actions[bot], which is not an iflytek
-# org member and therefore cannot prove namespace ownership.
+# Auth: GitHub OIDC. The default GITHUB_TOKEN authenticates as
+# github-actions[bot], which is not an iflytek org member and cannot prove
+# namespace ownership.
 #
-# Registry docs:
-#   https://github.com/modelcontextprotocol/registry/blob/main/docs/
-#   modelcontextprotocol-io/github-actions.mdx
+# Docs: https://github.com/modelcontextprotocol/registry/blob/main/docs/modelcontextprotocol-io/github-actions.mdx
 # =============================================================================
 
-name: Publish to MCP Registry
+name: Publish to MCP Registry (manual)
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to publish (e.g. 0.3.1, without the v prefix)'
+        description: 'Version to publish, without the v prefix (e.g. 0.3.1)'
         required: true
         type: string
+
+permissions:
+  contents: read
 
 jobs:
   publish-registry:
@@ -44,20 +44,48 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Determine version
+      # The dispatch input is attacker-controlled text. Interpolating it
+      # directly into a run: block splices it into the script before bash
+      # parses it, which in a job holding id-token: write would expose the
+      # registry OIDC credential.
+      # https://docs.github.com/en/actions/concepts/security/script-injections
+      - name: Validate and export version
         id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
-          else
-            VERSION="${GITHUB_REF_NAME#v}"  # strip the 'v' prefix from the tag
+          if ! printf '%s' "$INPUT_VERSION" \
+              | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([-.+][0-9A-Za-z.-]+)?$'; then
+            echo "::error::Rejected version '$INPUT_VERSION' (expected MAJOR.MINOR.PATCH)"
+            exit 1
           fi
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Publishing version: $VERSION"
+          echo "VERSION=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Publishing version: $INPUT_VERSION"
+
+      # Same prerequisite the tag-driven job gets from `needs: build-and-push`.
+      - name: Verify the published image exists and carries the ownership label
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          IMAGE="ghcr.io/iflytek/dolphin-mcp-pilot:${VERSION}"
+          echo "Inspecting ${IMAGE}"
+          if ! docker manifest inspect "${IMAGE}" > /dev/null 2>&1; then
+            echo "::error::${IMAGE} not found. Build and push it before publishing."
+            exit 1
+          fi
+          docker pull --quiet "${IMAGE}"
+          LABEL=$(docker inspect --format \
+            '{{index .Config.Labels "io.modelcontextprotocol.server.name"}}' "${IMAGE}")
+          echo "ownership label: ${LABEL:-<none>}"
+          if [ "${LABEL}" != "io.github.iflytek/dolphin-mcp-pilot" ]; then
+            echo "::error::Image is missing the io.modelcontextprotocol.server.name label"
+            exit 1
+          fi
 
       - name: Sync version and OCI tag into server.json
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
-          VERSION="${{ steps.version.outputs.VERSION }}"
           jq --arg v "$VERSION" '.version = $v' server.json > server.tmp
           mv server.tmp server.json
           jq --arg img "ghcr.io/iflytek/dolphin-mcp-pilot:$VERSION" \
@@ -65,9 +93,10 @@ jobs:
           mv server.tmp server.json
           cat server.json
 
-      # Catch schema violations here rather than at publish time, where a
-      # rejection would leave a pushed tag with nothing published against it.
-      - name: Validate server.json against the published schema
+      # Fail here rather than at publish time: a rejected publish would leave a
+      # pushed tag with nothing published against it, and versions cannot be
+      # reused.
+      - name: Validate server.json against its declared schema
         run: |
           python -m pip install --quiet check-jsonschema
           SCHEMA=$(jq -r '."$schema"' server.json)
@@ -87,7 +116,8 @@ jobs:
         run: ./mcp-publisher login github-oidc
 
       - name: Publish to the registry
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
           ./mcp-publisher publish
-          echo "Published io.github.iflytek/dolphin-mcp-pilot@${{ steps.version.outputs.VERSION }}"
-          echo "View at: https://registry.modelcontextprotocol.io/v0/servers?search=dolphin-mcp-pilot"
+          echo "Published io.github.iflytek/dolphin-mcp-pilot@${VERSION}"
