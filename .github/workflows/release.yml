@@ -76,3 +76,74 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # ---------------------------------------------------------------------------
+  # Publish the manifest to the official MCP Registry.
+  #
+  # `needs: build-and-push` is the point of this job living here rather than in
+  # its own tag-triggered workflow: the registry verifies namespace ownership by
+  # inspecting ghcr.io/iflytek/dolphin-mcp-pilot:<version> for the
+  # io.modelcontextprotocol.server.name label. Publishing before that image is
+  # pushed fails nondeterministically. Two workflows on the same tag gave no
+  # such ordering guarantee.
+  # ---------------------------------------------------------------------------
+  publish-registry:
+    name: Publish server.json to MCP Registry
+    needs: build-and-push
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # required to mint the OIDC token
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # GITHUB_REF_NAME comes from the tag ref, not from user input, so it is
+      # safe to expand here. It is still routed through env for consistency.
+      - name: Derive version from the tag
+        id: version
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          VERSION="${TAG_NAME#v}"
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Publishing version: $VERSION"
+
+      - name: Sync version and OCI tag into server.json
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          jq --arg v "$VERSION" '.version = $v' server.json > server.tmp
+          mv server.tmp server.json
+          jq --arg img "ghcr.io/iflytek/dolphin-mcp-pilot:$VERSION" \
+            '.packages[0].identifier = $img' server.json > server.tmp
+          mv server.tmp server.json
+          cat server.json
+
+      - name: Validate server.json against its declared schema
+        run: |
+          python -m pip install --quiet check-jsonschema
+          SCHEMA=$(jq -r '."$schema"' server.json)
+          echo "Validating against $SCHEMA"
+          python -m check_jsonschema --schemafile "$SCHEMA" server.json
+
+      - name: Install mcp-publisher
+        run: |
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+          ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+          curl -fsSL \
+            "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_${OS}_${ARCH}.tar.gz" \
+            | tar xz mcp-publisher
+          ./mcp-publisher --version
+
+      - name: Authenticate to the MCP Registry via OIDC
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to the registry
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          ./mcp-publisher publish
+          echo "Published io.github.iflytek/dolphin-mcp-pilot@${VERSION}"
