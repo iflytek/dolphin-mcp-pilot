@@ -1,6 +1,6 @@
 name: Publish to PyPI
 
-# Publishing runs only from tags. The build job also runs on pull requests so
+# Publishing runs from tags. The build job also runs on pull requests so
 # packaging regressions surface before a release is cut.
 on:
   push:
@@ -57,22 +57,36 @@ jobs:
             exit 1
           fi
 
+      # Catching a broken console script is the whole point of this step, so it
+      # must not swallow failures. `--help` is asserted to exit 0 and to name the
+      # program, which fails loudly if the entry point is missing or raises on
+      # import.
       - name: Smoke-test the built wheel
         run: |
+          set -euo pipefail
           python -m venv /tmp/venv
-          /tmp/venv/bin/pip install dist/*.whl
-          /tmp/venv/bin/python -W ignore -c "import dolphin_mcp_pilot as m; print('import ok, version', m.__version__)"
-          /tmp/venv/bin/dolphin-mcp-pilot --help || true
+          /tmp/venv/bin/pip install --quiet dist/*.whl
+          /tmp/venv/bin/python -c "import dolphin_mcp_pilot as m; print('import ok, version', m.__version__)"
+          /tmp/venv/bin/dolphin-mcp-pilot --help > /tmp/help.txt
+          grep -q "dolphin-mcp-pilot" /tmp/help.txt
+          echo "console script ok"
 
       - uses: actions/upload-artifact@v5
         with:
           name: dist
           path: dist/
 
+  # TestPyPI runs for tag pushes and for BOTH manual targets. Gating it on
+  # `target == 'testpypi'` alone skipped it for a manual pypi dispatch, and
+  # GitHub skips dependent jobs when a needed job is skipped -- so the
+  # advertised manual PyPI path never reached the publish action.
   testpypi:
     name: Publish to TestPyPI
     needs: build
-    if: github.event_name == 'push' || inputs.target == 'testpypi'
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      inputs.target == 'testpypi' ||
+      inputs.target == 'pypi'
     runs-on: ubuntu-latest
     environment: testpypi
     permissions:
@@ -90,7 +104,9 @@ jobs:
   pypi:
     name: Publish to PyPI
     needs: [build, testpypi]
-    if: startsWith(github.ref, 'refs/tags/v') || inputs.target == 'pypi'
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      inputs.target == 'pypi'
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
