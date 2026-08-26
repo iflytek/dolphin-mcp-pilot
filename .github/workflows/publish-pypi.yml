@@ -61,15 +61,43 @@ jobs:
       # must not swallow failures. `--help` is asserted to exit 0 and to name the
       # program, which fails loudly if the entry point is missing or raises on
       # import.
+      # Verifies the wheel is installable and its entry point is wired up.
+      # Note: main() takes no arguments -- it boots the stdio server immediately
+      # and would block on stdin, so the script is NOT executed here. Resolving
+      # the entry point is what catches the packaging regressions this step
+      # exists for (missing [project.scripts], bad module path, import-time
+      # errors). No `|| true`: every command below is load-bearing.
       - name: Smoke-test the built wheel
         run: |
           set -euo pipefail
           python -m venv /tmp/venv
           /tmp/venv/bin/pip install --quiet dist/*.whl
-          /tmp/venv/bin/python -c "import dolphin_mcp_pilot as m; print('import ok, version', m.__version__)"
-          /tmp/venv/bin/dolphin-mcp-pilot --help > /tmp/help.txt
-          grep -q "dolphin-mcp-pilot" /tmp/help.txt
-          echo "console script ok"
+
+          WHEEL_VERSION=$(python -c "import pathlib,sys; print(pathlib.Path(sys.argv[1]).name.split('-')[1])" "$(ls dist/*.whl | head -1)")
+
+          /tmp/venv/bin/python - "$WHEEL_VERSION" <<'PY'
+          import sys
+          from importlib.metadata import entry_points, version
+
+          expected = sys.argv[1]
+
+          import dolphin_mcp_pilot as pkg
+          print("import ok, __version__ =", pkg.__version__)
+
+          installed = version("dolphin-mcp-pilot")
+          assert installed == expected, f"wheel {expected} != installed {installed}"
+          assert pkg.__version__ == expected, f"__version__ {pkg.__version__} != wheel {expected}"
+
+          scripts = [ep for ep in entry_points(group="console_scripts")
+                     if ep.name == "dolphin-mcp-pilot"]
+          assert scripts, "console_scripts entry point 'dolphin-mcp-pilot' is missing"
+          fn = scripts[0].load()          # fails loudly on a bad module path
+          assert callable(fn), f"entry point resolved to {fn!r}, which is not callable"
+          print("entry point resolves to", f"{fn.__module__}:{fn.__qualname__}")
+          PY
+
+          test -x /tmp/venv/bin/dolphin-mcp-pilot
+          echo "console script installed and executable"
 
       - uses: actions/upload-artifact@v5
         with:
