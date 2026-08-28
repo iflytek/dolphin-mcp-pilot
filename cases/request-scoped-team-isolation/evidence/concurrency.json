@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-22T10:07:41.923521+00:00",
+  "transport": "official MCP Python SDK over Streamable HTTP",
+  "credential_delivery": "per-request headers (values omitted)",
+  "concurrency": 6,
+  "iterations_per_role": 20,
+  "total_calls": 40,
+  "successful_isolation_checks": 40,
+  "credential_bleed_count": 0,
+  "status": "PASS",
+  "role_summary": {
+    "finops": {
+      "expected_project_visible_in_all_calls": true,
+      "other_project_visible_in_any_call": false
+    },
+    "marketing": {
+      "expected_project_visible_in_all_calls": true,
+      "other_project_visible_in_any_call": false
+    }
+  }
+}

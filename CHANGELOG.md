@@ -9,22 +9,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.3.1] - 2026-08-28
+
 ### Added
 
-- MCP 2026-07-28 stateless protocol support through the MCP Python SDK 2.x.
+- **MCP Registry publishing** (#20): `server.json` manifest plus a
+  `publish-registry` job in `release.yml`, gated on `needs: build-and-push` so
+  publication cannot race the image push it depends on. A separate manual
+  `publish-registry.yml` covers recovery, and re-checks that the versioned
+  `ghcr.io` image exists and carries the
+  `io.modelcontextprotocol.server.name` ownership label before publishing.
+  Authentication uses GitHub OIDC (`login github-oidc`); `server.json` is
+  validated against its declared schema before `publish` so a rejected
+  manifest fails the build instead of leaving a tag with nothing published.
+- MCP 2026-07-28 stateless protocol support through the MCP Python SDK 2.x
+  (#22).
 - CI compatibility coverage for both an MCP 1.29 legacy client and an MCP 2.0
-  client against the same HTTP server.
+  client against the same HTTP server (#22).
+- **E2E integration tests** driven by docker-compose against a real
+  DolphinScheduler standalone server (#15), with read-only module coverage and
+  a forced-404 unit test pinning the monitor endpoint fallback order.
+- **Community case-study gallery** under `cases/` (#24), with six accepted
+  studies: release-gate recovery (#38), safe weekday schedule change (#39),
+  human-gated project cleanup (#41), request-scoped team isolation (#46), and
+  nightly-ETL / incident firefighting (#40).
+- DeepWiki badge in the README (#18).
 - `DS_API_STYLE` setting (`auto` / `process` / `workflow`) selecting the
   DolphinScheduler REST path spelling, with runtime auto-detection by default.
 
 ### Changed
 
 - Replaced the private FastMCP/session-manager integration with the public
-  `MCPServer.streamable_http_app()` API.
+  `MCPServer.streamable_http_app()` API (#22).
 - HTTP runs statelessly. MCP 2.0 requests never receive `Mcp-Session-Id`;
-  legacy clients remain supported by a per-request compatibility transport.
+  legacy clients remain supported by a per-request compatibility transport
+  (#22).
 - Raised the runtime dependency floor to `mcp>=2,<3`, `anyio>=4.9`,
-  `uvicorn>=0.31.1`, and `pydantic>=2.12`.
+  `uvicorn>=0.31.1`, and `pydantic>=2.13.4` (#22, #35).
+- Monitor and user tools now target the current DolphinScheduler endpoints
+  (`/monitor/{nodeType}`, `/users/list-all`) and fall back to the legacy
+  lowercase paths on `404`, so 3.2.1 and 3.2.2+ deployments both work from one
+  code base (#36).
+- Expanded the README quick start and use-case sections (#37), and documented
+  the DolphinScheduler compatibility target.
+- CI action bumps: `actions/checkout` 4 → 7 (#29),
+  `actions/setup-python` 5 → 7 (#48), `actions/upload-artifact` 4 → 7 (#28),
+  `docker/setup-qemu-action` 3 → 4 (#32), `docker/login-action` 3 → 4 (#31),
+  `docker/setup-buildx-action` 3 → 4 (#30),
+  `docker/build-push-action` 6 → 7 (#47),
+  `docker/metadata-action` 5 → 6 (#49), `pytest` floor → 7.4.4 (#34).
 
 ### Fixed
 
@@ -37,7 +72,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on 3.3.x/3.4.x — including `run_workflow`, which triggers via the executor
   endpoint.
 - Request authentication context is now restored after every HTTP request so
-  credentials cannot carry over to a later unauthenticated request.
+  credentials cannot carry over to a later unauthenticated request (#22).
+- The `io.modelcontextprotocol.server.name` label now sits on the final
+  runtime stage of the Dockerfile. On the `builder` stage it was absent from
+  the image actually pushed to `ghcr.io`, which is the one the registry
+  inspects to verify namespace ownership (#20).
+- `server.json` advertises the endpoint the container really serves,
+  `http://localhost:8001/mcp/`, matching `MCP_PORT=8001`, `EXPOSE 8001`, and
+  the documented trailing slash (#20).
+- The `workflow_dispatch` version input is passed through `env:` and validated
+  against a `MAJOR.MINOR.PATCH` pattern rather than interpolated into a shell
+  script, closing a script-injection path in a job that holds
+  `id-token: write` (#20).
 
 The HTTP endpoint remains `/mcp/`, and stdio behavior is unchanged.
 

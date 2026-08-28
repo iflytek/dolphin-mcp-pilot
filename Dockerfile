@@ -14,7 +14,11 @@ RUN pip install --timeout 300 -r requirements.txt
 # ---------- Stage 2: slim runtime image ----------
 FROM python:3.12-slim
 
-LABEL maintainer="dolphin-mcp-pilot contributors" \
+# io.modelcontextprotocol.server.name proves namespace ownership to the
+# MCP Registry. It must live on the FINAL stage, because only this image
+# is pushed to ghcr.io and inspected during `mcp-publisher publish`.
+LABEL io.modelcontextprotocol.server.name="io.github.iflytek/dolphin-mcp-pilot" \
+      maintainer="dolphin-mcp-pilot contributors" \
       description="dolphin-mcp-pilot - DolphinScheduler MCP Server (open source)" \
       org.opencontainers.image.title="dolphin-mcp-pilot" \
       org.opencontainers.image.description="Production-ready MCP server for Apache DolphinScheduler" \
