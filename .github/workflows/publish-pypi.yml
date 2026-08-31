@@ -1,16 +1,14 @@
 name: Publish to PyPI
 
-# Publishing runs from tags. The build job also runs on pull requests so
-# packaging regressions surface before a release is cut.
+# Publishing is release-only: a v*.*.* tag, or an explicit manual dispatch.
+#
+# Deliberately no pull_request trigger. ci.yml already has a "Package build"
+# job on every PR that runs `python -m build` and imports the module from the
+# resulting wheel, so packaging regressions are caught there. Duplicating it
+# here would just spend a second runner per PR to prove the same thing.
 on:
   push:
     tags: ["v*.*.*"]
-  pull_request:
-    branches: [main]
-    paths:
-      - "pyproject.toml"
-      - "dolphin_mcp_pilot/**"
-      - ".github/workflows/publish-pypi.yml"
   workflow_dispatch:
     inputs:
       target:
