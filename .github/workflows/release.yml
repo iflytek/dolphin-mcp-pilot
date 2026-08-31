@@ -98,7 +98,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # GITHUB_REF_NAME comes from the tag ref, not from user input, so it is
       # safe to expand here. It is still routed through env for consistency.
