@@ -1,0 +1,145 @@
+name: Publish to PyPI
+
+# Publishing is release-only: a v*.*.* tag, or an explicit manual dispatch.
+#
+# Deliberately no pull_request trigger. ci.yml already has a "Package build"
+# job on every PR that runs `python -m build` and imports the module from the
+# resulting wheel, so packaging regressions are caught there. Duplicating it
+# here would just spend a second runner per PR to prove the same thing.
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Where to publish"
+        required: true
+        default: testpypi
+        type: choice
+        options: [testpypi, pypi]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+
+      - name: Verify wheel metadata
+        run: |
+          python -m pip install --upgrade twine
+          python -m twine check dist/*
+
+      # Guard against the tag and the packaged version drifting apart.
+      - name: Check tag matches package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(python -c "import tomllib,pathlib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
+          echo "tag=$TAG package=$PKG"
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match pyproject version $PKG"
+            exit 1
+          fi
+
+      # Catching a broken console script is the whole point of this step, so it
+      # must not swallow failures. `--help` is asserted to exit 0 and to name the
+      # program, which fails loudly if the entry point is missing or raises on
+      # import.
+      # Verifies the wheel is installable and its entry point is wired up.
+      # Note: main() takes no arguments -- it boots the stdio server immediately
+      # and would block on stdin, so the script is NOT executed here. Resolving
+      # the entry point is what catches the packaging regressions this step
+      # exists for (missing [project.scripts], bad module path, import-time
+      # errors). No `|| true`: every command below is load-bearing.
+      - name: Smoke-test the built wheel
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/venv
+          /tmp/venv/bin/pip install --quiet dist/*.whl
+
+          WHEEL_VERSION=$(python -c "import pathlib,sys; print(pathlib.Path(sys.argv[1]).name.split('-')[1])" "$(ls dist/*.whl | head -1)")
+
+          /tmp/venv/bin/python - "$WHEEL_VERSION" <<'PY'
+          import sys
+          from importlib.metadata import entry_points, version
+
+          expected = sys.argv[1]
+
+          import dolphin_mcp_pilot as pkg
+          print("import ok, __version__ =", pkg.__version__)
+
+          installed = version("dolphin-mcp-pilot")
+          assert installed == expected, f"wheel {expected} != installed {installed}"
+          assert pkg.__version__ == expected, f"__version__ {pkg.__version__} != wheel {expected}"
+
+          scripts = [ep for ep in entry_points(group="console_scripts")
+                     if ep.name == "dolphin-mcp-pilot"]
+          assert scripts, "console_scripts entry point 'dolphin-mcp-pilot' is missing"
+          fn = scripts[0].load()          # fails loudly on a bad module path
+          assert callable(fn), f"entry point resolved to {fn!r}, which is not callable"
+          print("entry point resolves to", f"{fn.__module__}:{fn.__qualname__}")
+          PY
+
+          test -x /tmp/venv/bin/dolphin-mcp-pilot
+          echo "console script installed and executable"
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: dist
+          path: dist/
+
+  # TestPyPI runs for tag pushes and for BOTH manual targets. Gating it on
+  # `target == 'testpypi'` alone skipped it for a manual pypi dispatch, and
+  # GitHub skips dependent jobs when a needed job is skipped -- so the
+  # advertised manual PyPI path never reached the publish action.
+  testpypi:
+    name: Publish to TestPyPI
+    needs: build
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      inputs.target == 'testpypi' ||
+      inputs.target == 'pypi'
+    runs-on: ubuntu-latest
+    environment: testpypi
+    permissions:
+      id-token: write   # required for trusted publishing
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+
+  pypi:
+    name: Publish to PyPI
+    needs: [build, testpypi]
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      inputs.target == 'pypi'
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write   # required for trusted publishing
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

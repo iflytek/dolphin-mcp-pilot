@@ -28,6 +28,12 @@ dependencies = [
   "anyio>=4.9.0",
   "uvicorn>=0.31.1",
   "starlette>=0.37.0",
+  "pydantic>=2.13.4,<3.0.0",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=7.4.4",
 ]
 
 [project.urls]
