@@ -10,9 +10,11 @@
 
 </div>
 
-Apache DolphinScheduler 的生产级 MCP 服务器。
+**让 AI Agent 真正去操作你的数据管道，而不只是读取它。**
 
-**dolphin-mcp-pilot** 提供 **53+ 工具**，覆盖项目管理、工作流、DAG 创建、调度、实例、资源、日志、监控以及原始 API 透传 —— 专为需要超越只读操作的 AI Agent 设计。
+**dolphin-mcp-pilot** 是 Apache DolphinScheduler 的生产级 [MCP](https://modelcontextprotocol.io) 服务器。它提供 **58 个工具**，让 AI Agent 端到端地构建、调度、运行、监控并*恢复*真实工作流 —— DAG/SQL 创建、Cron 调度、实例生命周期（暂停 / 恢复 / 重跑 / 从失败处重跑）、日志、资源、版本回滚与原始 API 透传，并支持多租户每请求鉴权。
+
+大多数公开的 DolphinScheduler MCP 服务器止步于读 / 列 / 启 / 停。本项目面向**真实运维与无人值守恢复** —— 也正是 Agent 最容易卡住的地方。
 
 ## 🎯 为什么需要这个项目？
 
@@ -30,7 +32,7 @@ Apache DolphinScheduler 的生产级 MCP 服务器。
 
 ## 🚀 核心特性
 
-- **53+ 工具**，覆盖 DS 大部分实用操作
+- **58 个工具**，覆盖 DS 大部分实用操作
 - **两种鉴权模式**：API Token（`X-DS-Token`）或用户名密码（`X-DS-User` + `X-DS-Password`）
 - **多租户 HTTP 模式**：每个调用方可使用自己的凭据
 - **MCP 2.0 无状态 HTTP**：同时自动兼容 MCP 1.x 客户端
@@ -104,7 +106,7 @@ HTTP/SSE 的 MCP 客户端：
 | [🚀 部署指南](docs/DEPLOYMENT.md) | 生产部署、Compose 参考、验证、排错 |
 | [📊 功能特性](docs/FEATURES.md) | 功能对比表、工具分类 |
 | [🔐 客户端配置](docs/CLIENT_CONFIG.md) | MCP 客户端接入（CodeBuddy、Claude Desktop 等）、多租户鉴权 |
-| [📖 API 参考](docs/API.md) | 全部 53+ 工具、参数规范、错误处理 |
+| [📖 API 参考](docs/API.md) | 全部 58 个工具、参数规范、错误处理 |
 | [❓ 常见问题](docs/FAQ.md) | 常见问题与解决方案 |
 
 ## ✨ 最新动态

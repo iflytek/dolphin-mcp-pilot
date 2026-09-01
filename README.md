@@ -11,9 +11,11 @@
 
 </div>
 
-A production-ready MCP server for Apache DolphinScheduler.
+**Let AI agents actually operate your data pipelines — not just read them.**
 
-**dolphin-mcp-pilot** exposes **53+ tools** for projects, workflows, DAG creation, schedules, instances, resources, logs, monitoring and raw API passthrough — designed for AI agents that need to operate DolphinScheduler beyond basic read-only usage.
+**dolphin-mcp-pilot** is a production-ready [MCP](https://modelcontextprotocol.io) server for **Apache DolphinScheduler**. It exposes **58 tools** so an AI agent can build, schedule, run, monitor and *recover* real workflows end-to-end — DAG/SQL creation, cron schedules, instance lifecycle (pause / resume / rerun / rerun-from-failure), logs, resources, version rollback and raw API passthrough — with multi-tenant per-request auth.
+
+Most public DolphinScheduler MCP servers stop at read / list / start / stop. This one is built for **real operations and unattended recovery** — the part agents actually get stuck on.
 
 ## 🎯 Why this project?
 
@@ -31,7 +33,7 @@ This project is designed for **real operations work**:
 
 ## 🚀 Key features
 
-- **53+ tools** covering most practical DS operations
+- **58 tools** covering most practical DS operations
 - **Two auth modes**: API Token (`X-DS-Token`) or User/Password (`X-DS-User` + `X-DS-Password`)
 - **Multi-tenant HTTP mode**: each caller can use its own credentials
 - **MCP 2.0 stateless HTTP** with automatic compatibility for MCP 1.x clients
@@ -107,7 +109,7 @@ inside your MCP client to discover the recommended workflow for each task.
 | [🚀 Deployment](docs/DEPLOYMENT.md) | Production deployment, Compose reference, verify, troubleshoot |
 | [📊 Features](docs/FEATURES.md) | Feature comparison table, tool categories |
 | [🔐 Client Config](docs/CLIENT_CONFIG.md) | MCP client setup (CodeBuddy, Claude Desktop, etc.), multi-tenant auth |
-| [📖 API Reference](docs/API.md) | All 53+ tools, parameter conventions, error handling (中文) |
+| [📖 API Reference](docs/API.md) | All 58 tools, parameter conventions, error handling (中文) |
 | [❓ FAQ](docs/FAQ.md) | Common issues and solutions (中文) |
 
 ## ✨ What's new
