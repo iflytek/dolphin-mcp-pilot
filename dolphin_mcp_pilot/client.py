@@ -20,12 +20,73 @@ from __future__ import annotations
 import json
 import mimetypes
 import os
+import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
 
-from .config import get_ds_url
+from . import api_compat
+from .config import get_ds_api_style, get_ds_url
 from .auth import login
+
+# Cached result of API-path-style auto-detection (see _effective_api_style).
+_resolved_api_style: str | None = None
+
+
+def _detect_api_style() -> str | None:
+    """Probe the target DolphinScheduler for its REST path style.
+
+    DS 3.3.0+ exposes the ``workflow-definition`` controller; 3.2.x does not.
+    A bogus project code is enough — we only care whether the route exists.
+
+    Returns a confident ``"workflow"`` / ``"process"`` verdict, or ``None`` when
+    the probe is inconclusive (the session was rejected, a proxy returned 5xx,
+    the request timed out). ``None`` must not be cached: a single unlucky probe
+    at startup should not stick the tool on the wrong path family for the whole
+    process lifetime.
+    """
+    try:
+        ds_api_request(
+            "GET",
+            "/projects/0/workflow-definition/simple-list",
+            _resolve=False,
+        )
+        # 2xx: the workflow controller answered -> 3.3.0+.
+        return "workflow"
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            # Route genuinely absent -> legacy 3.2.x spelling.
+            return "process"
+        if exc.code == 403:
+            # Route resolved but denied us -> the controller exists (3.3.0+).
+            return "workflow"
+        # 401 / 5xx / anything else: inconclusive, let the next call retry.
+        return None
+    except Exception:
+        # Network timeout, connection reset, decode error, etc.: inconclusive.
+        return None
+
+
+def _effective_api_style() -> str:
+    """Return the path style to apply, detecting once when set to ``auto``.
+
+    Only a confident detection is cached. An inconclusive probe falls back to
+    the legacy ``"process"`` spelling for this one call but leaves the cache
+    unset, so the next request re-probes and detection can self-heal instead of
+    getting stuck on a transient startup failure.
+    """
+    global _resolved_api_style
+    configured = get_ds_api_style()
+    if configured != "auto":
+        return configured
+    if _resolved_api_style is None:
+        _resolved_api_style = _detect_api_style()
+    return _resolved_api_style or "process"
+
+
+def _resolve_path(path: str) -> str:
+    """Rewrite legacy DS path segments for the target version when needed."""
+    return api_compat.apply_style(path, _effective_api_style())
 
 
 def ds_api_request(
@@ -34,6 +95,7 @@ def ds_api_request(
     data: dict | None = None,
     json_body: dict | None = None,
     timeout: int | None = None,
+    _resolve: bool = True,
 ) -> dict:
     """发送 HTTP 请求到 DolphinScheduler API
 
@@ -47,6 +109,8 @@ def ds_api_request(
     Returns:
         API 响应的 JSON 数据
     """
+    if _resolve:
+        path = _resolve_path(path)
     url = get_ds_url()
     sid = login()
     full_url = f"{url}{path}"
@@ -162,6 +226,7 @@ def _multipart_request(
     fields: dict | None = None,
     files: dict | None = None,
 ) -> dict:
+    path = _resolve_path(path)
     url = get_ds_url()
     sid = login()
     full_url = f"{url}{path}"
@@ -189,6 +254,7 @@ def ds_download_bytes(path: str) -> bytes:
     Returns:
         原始响应字节
     """
+    path = _resolve_path(path)
     url = get_ds_url()
     sid = login()
     full_url = f"{url}{path}"

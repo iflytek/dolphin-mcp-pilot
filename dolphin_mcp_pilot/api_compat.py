@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+# Copyright 2026 iFLYTEK CO., LTD.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""DolphinScheduler API path-compatibility helpers.
+
+DolphinScheduler renamed several REST path segments in the 3.3 line
+(``process`` -> ``workflow``):
+
+    process-definition            ->  workflow-definition
+    process-instances             ->  workflow-instances
+    start-process-instance        ->  start-workflow-instance
+    batch-start-process-instance  ->  batch-start-workflow-instance
+
+The class-level controllers (``process-definition`` / ``process-instances``)
+and the executor trigger endpoints (``start-process-instance`` /
+``batch-start-process-instance``, under ``/executors``) all moved; the
+``/executors/execute`` control endpoint did *not*.
+
+The tool's call sites are written against the legacy ("process") spelling.
+This module rewrites those path segments to the ``workflow`` spelling when
+the target deployment is DolphinScheduler >= 3.3.0, so a single code base
+drives both the 3.2.x and the 3.3.x/3.4.x API families.
+
+Everything here is pure and side-effect free; live version detection lives
+in :mod:`dolphin_mcp_pilot.client`, which owns the HTTP/auth layer.
+"""
+
+from __future__ import annotations
+
+# Legacy (<= 3.2.x) path segment  ->  3.3.x+ path segment.
+# Keyed on the *legacy* spelling because that is what the call sites emit.
+SEGMENT_MAP = {
+    "process-definition": "workflow-definition",
+    "process-instances": "workflow-instances",
+    "start-process-instance": "start-workflow-instance",
+    "batch-start-process-instance": "batch-start-workflow-instance",
+}
+
+VALID_STYLES = ("auto", "process", "workflow")
+
+
+def normalize_style(value: str | None) -> str:
+    """Normalise a configured style string to one of :data:`VALID_STYLES`.
+
+    Unknown / empty values fall back to ``"auto"`` so a typo never hard-fails
+    a deployment; it just means "detect it".
+    """
+    style = (value or "").strip().lower()
+    return style if style in VALID_STYLES else "auto"
+
+
+def apply_style(path: str, style: str) -> str:
+    """Rewrite legacy path segments to the ``workflow`` spelling when needed.
+
+    Only whole ``/``-delimited path segments that appear verbatim in
+    :data:`SEGMENT_MAP` are rewritten, and only the path portion before any
+    ``?`` query string is touched. So a segment that was *not* renamed (e.g.
+    ``executors/execute``) is left intact, and a query parameter that merely
+    contains a mapped token as a substring (e.g. ``?processInstanceId=42``) is
+    never rewritten.
+
+    The rewrite is a no-op for the ``process`` / ``auto`` styles and is
+    idempotent for the ``workflow`` style.
+    """
+    if style != "workflow" or not path:
+        return path
+
+    if "?" in path:
+        base, query = path.split("?", 1)
+        suffix = "?" + query
+    else:
+        base, suffix = path, ""
+
+    segments = [SEGMENT_MAP.get(segment, segment) for segment in base.split("/")]
+    return "/".join(segments) + suffix
