@@ -14,6 +14,25 @@ Apache DolphinScheduler 的生产级 MCP 服务器。
 
 **dolphin-mcp-pilot** 提供 **53+ 工具**，覆盖项目管理、工作流、DAG 创建、调度、实例、资源、日志、监控以及原始 API 透传 —— 专为需要超越只读操作的 AI Agent 设计。
 
+## 🔧 兼容性
+
+**dolphin-mcp-pilot** 面向 Apache DolphinScheduler **3.x**。自动化 Docker Compose E2E 每次 CI 都会针对
+3.4.x standalone 镜像运行；其余版本则对照上游对应的 API Controller 源码核对，并在接口存在差异处以运行时
+兼容回退覆盖。
+
+| DolphinScheduler（后端引擎） | 状态 | 验证方式 |
+|---|---|---|
+| 3.4.x standalone | ✅ CI 实测 | 自动化 Docker Compose E2E，默认 `DS_VERSION=3.4.2` |
+| 3.2.2 – 3.3.x / `dev` | ✔️ 源码核对 | 监控列表走枚举路由 `/monitor/{nodeType}`；其余只读路由对照上游 Controller 核对并有单测锁定 |
+| 3.0.x – 3.2.1 | ✔️ 源码核对 | 旧版监控路由（`/monitor/masters`、`/monitor/workers`）通过 `_list_servers` 中的 404 自动回退访问 |
+
+**图例** —— ✅ **CI 实测**：每次 CI 都会针对真实 DS 镜像运行 · ✔️ **源码核对**：接口路径已对照上游对应
+`*Controller` 源码核对并有单测锁定，但尚未纳入 CI 镜像矩阵。
+
+> **说明：** DS 3.3 系列引入的 `process-*` → `workflow-*` REST 路径重命名（如
+> `workflow-definition`、`workflow-instances`）影响工作流/实例类工具，已在
+> [#42](https://github.com/iflytek/dolphin-mcp-pilot/issues/42) 中单独跟踪。
+
 ## 🎯 为什么需要这个项目？
 
 目前公开的 DolphinScheduler MCP 服务器大多只覆盖基础的读/列/启停场景。

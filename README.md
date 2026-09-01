@@ -15,6 +15,26 @@ A production-ready MCP server for Apache DolphinScheduler.
 
 **dolphin-mcp-pilot** exposes **53+ tools** for projects, workflows, DAG creation, schedules, instances, resources, logs, monitoring and raw API passthrough — designed for AI agents that need to operate DolphinScheduler beyond basic read-only usage.
 
+## 🔧 Compatibility
+
+**dolphin-mcp-pilot** targets Apache DolphinScheduler **3.x**. The automated Docker Compose E2E
+suite runs against the 3.4.x standalone image on every CI run; the other lines are verified against
+the matching upstream API controller source and covered by runtime fallbacks where endpoints differ.
+
+| DolphinScheduler (backend engine) | Status | How it's verified |
+|---|---|---|
+| 3.4.x standalone | ✅ CI-validated | Automated Docker Compose E2E, default `DS_VERSION=3.4.2` |
+| 3.2.2 – 3.3.x / `dev` | ✔️ Source-verified | Monitor listing uses the enum route `/monitor/{nodeType}`; other read-only routes checked against upstream controllers and pinned by unit tests |
+| 3.0.x – 3.2.1 | ✔️ Source-verified | Legacy monitor routes (`/monitor/masters`, `/monitor/workers`) reached via automatic 404 fallback in `_list_servers` |
+
+**Legend** — ✅ **CI-validated**: exercised on every CI run against a live DS image · ✔️ **Source-verified**:
+endpoint paths checked against the matching upstream `*Controller` source and locked by unit tests, but not
+yet part of the CI image matrix.
+
+> **Note:** the `process-*` → `workflow-*` REST path rename that landed in the DS 3.3 line (e.g.
+> `workflow-definition`, `workflow-instances`) affects the workflow/instance tools and is tracked
+> separately in [#42](https://github.com/iflytek/dolphin-mcp-pilot/issues/42).
+
 ## 🎯 Why this project?
 
 Most public DolphinScheduler MCP servers only cover basic read/list/start/stop scenarios.
