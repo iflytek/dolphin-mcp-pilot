@@ -11,7 +11,7 @@
 
 </div>
 
-A production-ready MCP server for Apache DolphinScheduler.
+A production-ready MCP server for Apache DolphinScheduler (小海豚).
 
 **dolphin-mcp-pilot** exposes **53+ tools** for projects, workflows, DAG creation, schedules, instances, resources, logs, monitoring and raw API passthrough — designed for AI agents that need to operate DolphinScheduler beyond basic read-only usage.
 
