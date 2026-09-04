@@ -10,7 +10,7 @@
 
 </div>
 
-Apache DolphinScheduler 的生产级 MCP 服务器。
+Apache DolphinScheduler（小海豚调度系统）的生产级 MCP 服务器。
 
 **dolphin-mcp-pilot** 提供 **53+ 工具**，覆盖项目管理、工作流、DAG 创建、调度、实例、资源、日志、监控以及原始 API 透传 —— 专为需要超越只读操作的 AI Agent 设计。
 
