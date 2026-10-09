@@ -190,7 +190,19 @@ def register_schedule_tools(mcp: MCPServer):
 
     @mcp.tool()
     def ds_online_schedule(project_name: str, schedule_id: int) -> dict:
-        """Activate (bring online) a schedule."""
+        """Bring a schedule online so it starts triggering workflow runs.
+
+        Needed after ds_set_schedule, which creates schedules offline. The
+        workflow itself must be online (ds_release_workflow). Reverse with
+        ds_offline_schedule.
+
+        Args:
+            project_name: Project name
+            schedule_id: Schedule ID (from ds_set_schedule or ds_list_schedules)
+
+        Returns:
+            {"schedule_id": int, "status": "ONLINE"}
+        """
         pcode = resolve_project_code(project_name)
         result = ds_post(f"/projects/{pcode}/schedules/{schedule_id}/online")
         require_ok(result, "online schedule")
@@ -198,7 +210,18 @@ def register_schedule_tools(mcp: MCPServer):
 
     @mcp.tool()
     def ds_offline_schedule(project_name: str, schedule_id: int) -> dict:
-        """Deactivate (take offline) a schedule."""
+        """Take a schedule offline so it stops triggering new runs.
+
+        Keeps the schedule and running instances; bring it back with
+        ds_online_schedule, or remove it with ds_delete_schedule.
+
+        Args:
+            project_name: Project name
+            schedule_id: Schedule ID (from ds_list_schedules)
+
+        Returns:
+            {"schedule_id": int, "status": "OFFLINE"}
+        """
         pcode = resolve_project_code(project_name)
         result = ds_post(f"/projects/{pcode}/schedules/{schedule_id}/offline")
         require_ok(result, "offline schedule")

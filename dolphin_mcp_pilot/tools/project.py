@@ -50,11 +50,18 @@ def register_project_tools(mcp: MCPServer):
 
     @mcp.tool()
     def ds_create_project(name: str, description: str = "") -> dict:
-        """Create a new project.
+        """Create a new project owned by the current user.
+
+        Fails if a project with the same name already exists; check with
+        ds_list_projects first. Use ds_rename_project to change it later.
 
         Args:
-            name: Project name
+            name: Project name, unique in DolphinScheduler
             description: Optional description
+
+        Returns:
+            {"id": int, "code": int, "name": str}; other tools take the project
+            by name.
         """
         result = ds_post(
             "/projects", data={"projectName": name, "description": description}

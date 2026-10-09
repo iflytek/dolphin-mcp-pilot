@@ -320,12 +320,19 @@ def register_workflow_advanced_tools(mcp: MCPServer):
         workflow_code: int,
         page_size: int = 20,
     ) -> list:
-        """List historical versions of a workflow.
+        """List saved versions of a workflow definition (read-only).
+
+        Each save of the workflow creates a version. Use the returned version
+        number with ds_rollback_workflow_version.
 
         Args:
             project_name: Project name
-            workflow_code: Process-definition code
-            page_size: Number of items to return
+            workflow_code: Workflow (process-definition) code from ds_list_workflows
+            page_size: Maximum number of versions to return (first page, default 20)
+
+        Returns:
+            [{"version": int, "description": str, "createTime": str,
+              "updateTime": str}, ...]
         """
         pcode = resolve_project_code(project_name)
         result = ds_get(

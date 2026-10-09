@@ -26,10 +26,17 @@ def register_datasource_tools(mcp: MCPServer):
 
     @mcp.tool()
     def ds_list_datasources(ds_type: str = "HIVE") -> list:
-        """List data sources.
+        """List the data sources of one type that the current user can see (read-only).
+
+        Pass the returned ``id`` as ``datasource_id`` of SQL tasks, e.g. in
+        ds_create_workflow or ds_create_dag_workflow.
 
         Args:
-            ds_type: HIVE / MYSQL / POSTGRESQL / SPARK / CLICKHOUSE etc.
+            ds_type: Data source type in DolphinScheduler's upper-case form, e.g.
+                HIVE (default), MYSQL, POSTGRESQL, SPARK, CLICKHOUSE.
+
+        Returns:
+            [{"id": int, "name": str, "type": str}, ...]; empty if none match.
         """
         result = ds_get(f"/datasources/list?type={ds_type}")
         require_ok(result, "list datasources")
