@@ -34,7 +34,19 @@ def register_raw_tools(mcp: MCPServer):
 
     @mcp.tool()
     def ds_raw_delete(path: str) -> dict:
-        """Pass DELETE through to DolphinScheduler API."""
+        """Send a raw DELETE request to the DolphinScheduler API (escape hatch).
+
+        Deletes are irreversible. Prefer the dedicated ds_delete_* tools; use this
+        only for endpoints they do not cover.
+
+        Args:
+            path: API path starting with / and excluding the /dolphinscheduler
+                prefix, with any query string, e.g. "/projects/123/schedules/7"
+
+        Returns:
+            DolphinScheduler's response as-is ({"code", "msg", "data", ...});
+            code 0 means success.
+        """
         return ds_delete(path)
 
     @mcp.tool()
@@ -56,7 +68,22 @@ def register_raw_tools(mcp: MCPServer):
     def ds_raw_put(
         path: str, form_data_json: str = "", json_body_json: str = ""
     ) -> dict:
-        """Pass PUT through to DolphinScheduler API."""
+        """Send a raw PUT request to the DolphinScheduler API (escape hatch).
+
+        Prefer the dedicated update tools (e.g. ds_update_workflow,
+        ds_update_schedule_cron); use this only for endpoints they do not cover.
+
+        Args:
+            path: API path starting with / and excluding the /dolphinscheduler
+                prefix, e.g. "/projects/123/schedules/7"
+            form_data_json: form-urlencoded params as a JSON object string, e.g.
+                '{"crontab": "0 0 2 * * ? *"}' (set this or json_body_json)
+            json_body_json: JSON body as a JSON string (set this or form_data_json)
+
+        Returns:
+            DolphinScheduler's response as-is ({"code", "msg", "data", ...});
+            code 0 means success.
+        """
         data = json.loads(form_data_json) if form_data_json else None
         body = json.loads(json_body_json) if json_body_json else None
         return ds_put(path, data=data, json_body=body)

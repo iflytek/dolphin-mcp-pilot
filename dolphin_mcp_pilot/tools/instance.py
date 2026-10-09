@@ -115,7 +115,21 @@ def register_instance_tools(mcp: MCPServer):
 
     @mcp.tool()
     def ds_pause_process_instance(project_name: str, process_instance_id: int) -> dict:
-        """Pause a running workflow instance."""
+        """Pause a RUNNING workflow instance (reversible; not a stop).
+
+        Tasks already running finish, no new tasks are started, and the instance
+        ends in PAUSE state. Use ds_resume_process_instance to continue it, or
+        ds_stop_process_instance to kill it instead.
+
+        Args:
+            project_name: Project name
+            process_instance_id: Instance ID (from ds_list_process_instances)
+
+        Returns:
+            {"process_instance_id": int, "executeType": "PAUSE",
+             "status": "submitted"}; the request is asynchronous, so check the
+            state with ds_list_process_instances.
+        """
         pcode = resolve_project_code(project_name)
         result = ds_post(
             f"/projects/{pcode}/executors/execute",
@@ -130,7 +144,20 @@ def register_instance_tools(mcp: MCPServer):
 
     @mcp.tool()
     def ds_resume_process_instance(project_name: str, process_instance_id: int) -> dict:
-        """Resume a paused workflow instance."""
+        """Resume a workflow instance that is in PAUSE state.
+
+        Continues from where ds_pause_process_instance stopped it. Not for failed
+        or stopped instances: use ds_rerun_from_failure or ds_rerun_process_instance.
+
+        Args:
+            project_name: Project name
+            process_instance_id: Instance ID (from ds_list_process_instances)
+
+        Returns:
+            {"process_instance_id": int,
+             "executeType": "RECOVER_SUSPENDED_PROCESS", "status": "submitted"};
+            the request is asynchronous.
+        """
         pcode = resolve_project_code(project_name)
         result = ds_post(
             f"/projects/{pcode}/executors/execute",
@@ -184,7 +211,18 @@ def register_instance_tools(mcp: MCPServer):
 
     @mcp.tool()
     def ds_delete_process_instance(project_name: str, process_instance_id: int) -> dict:
-        """Delete a historical process instance."""
+        """Permanently delete a finished workflow instance and its task records.
+
+        Irreversible. DolphinScheduler rejects deleting a RUNNING instance; stop it
+        first with ds_stop_process_instance. Does not affect the workflow definition.
+
+        Args:
+            project_name: Project name
+            process_instance_id: Instance ID (from ds_list_process_instances)
+
+        Returns:
+            {"process_instance_id": int, "status": "deleted"}
+        """
         pcode = resolve_project_code(project_name)
         result = ds_delete(f"/projects/{pcode}/process-instances/{process_instance_id}")
         require_ok(result, "delete process instance")
