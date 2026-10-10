@@ -30,6 +30,15 @@ DS_TOKEN = os.environ.get("DS_TOKEN", "")
 # Override via env DS_TENANT_CODE if your org uses a custom tenant.
 DS_TENANT_CODE = os.environ.get("DS_TENANT_CODE", "default")
 
+# ---- DolphinScheduler API path style ----
+# DolphinScheduler 3.3.0 renamed several REST path segments
+# (process-definition -> workflow-definition, process-instances ->
+# workflow-instances). Values:
+#   auto     - detect the target version at runtime (default)
+#   process  - force the legacy <= 3.2.x spelling
+#   workflow - force the 3.3.0+ spelling
+DS_API_STYLE = os.environ.get("DS_API_STYLE", "auto")
+
 # ---- MCP server ----
 DS_MCP_TRANSPORT = os.environ.get("DS_MCP_TRANSPORT", "stdio").strip().lower()
 MCP_PORT = int(os.environ.get("MCP_PORT", "8001"))
@@ -73,3 +82,13 @@ def get_ds_credentials() -> tuple[str, str]:
 def get_ds_token_env() -> str:
     """Return API token from environment (may be empty)."""
     return DS_TOKEN.strip()
+
+
+def get_ds_api_style() -> str:
+    """Return the configured DolphinScheduler API path style.
+
+    One of "auto" (default), "process", or "workflow". See DS_API_STYLE.
+    """
+    from .api_compat import normalize_style
+
+    return normalize_style(DS_API_STYLE)

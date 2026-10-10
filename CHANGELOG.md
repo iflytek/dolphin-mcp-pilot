@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   human-gated project cleanup (#41), request-scoped team isolation (#46), and
   nightly-ETL / incident firefighting (#40).
 - DeepWiki badge in the README (#18).
+- `DS_API_STYLE` setting (`auto` / `process` / `workflow`) selecting the
+  DolphinScheduler REST path spelling, with runtime auto-detection by default.
 
 ### Changed
 
@@ -61,6 +63,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Compatibility with DolphinScheduler 3.3.x+, which renamed the
+  `process-definition` / `process-instances` REST path segments to
+  `workflow-definition` / `workflow-instances`, and the executor trigger
+  endpoints `start-process-instance` / `batch-start-process-instance` to
+  `start-workflow-instance` / `batch-start-workflow-instance`. Requests are
+  now rewritten to the target version's spelling instead of failing with 404
+  on 3.3.x/3.4.x — including `run_workflow`, which triggers via the executor
+  endpoint.
 - Request authentication context is now restored after every HTTP request so
   credentials cannot carry over to a later unauthenticated request (#22).
 - The `io.modelcontextprotocol.server.name` label now sits on the final
