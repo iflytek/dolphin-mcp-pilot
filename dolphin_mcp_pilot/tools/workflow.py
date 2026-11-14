@@ -328,6 +328,8 @@ def register_workflow_tools(mcp: MCPServer):
                 "delayTime": task.get("delayTime", 0),
                 "environmentCode": task.get("environmentCode", -1),
                 "taskExecuteType": task.get("taskExecuteType", "BATCH"),
+                # DolphinScheduler 3.3.x requires this field; see issue #61
+                "isCache": task.get("is_cache", task.get("isCache", "NO")),
             }
             task_definitions.append(task_def)
 
