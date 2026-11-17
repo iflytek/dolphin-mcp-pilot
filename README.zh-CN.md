@@ -6,6 +6,7 @@
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/iflytek/dolphin-mcp-pilot/actions/workflows/ci.yml/badge.svg)](https://github.com/iflytek/dolphin-mcp-pilot/actions/workflows/ci.yml)
 [![dolphin-mcp-pilot MCP server – quality and maintenance score on Glama](https://glama.ai/mcp/servers/iflytek/dolphin-mcp-pilot/badges/score.svg)](https://glama.ai/mcp/servers/iflytek/dolphin-mcp-pilot)
+[![Dolphin Pilot MCP on MCPRush](https://mcprush.com/badge/dolphin-pilot-mcp/compact.svg)](https://mcprush.com/to/dolphin-pilot-mcp?ref=badge)
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
