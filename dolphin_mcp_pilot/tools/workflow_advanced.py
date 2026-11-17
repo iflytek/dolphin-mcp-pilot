@@ -78,6 +78,8 @@ def _build_task_definition(task_code: int, task: dict) -> dict:
         "delayTime": task.get("delay_time", task.get("delayTime", 0)),
         "environmentCode": -1,
         "taskExecuteType": "BATCH",
+        # DolphinScheduler 3.3.x requires this field; see issue #61
+        "isCache": "NO",
     }
 
     if ttype == "SQL":
