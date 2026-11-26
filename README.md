@@ -15,7 +15,7 @@
 
 A production-ready MCP server for Apache DolphinScheduler (小海豚).
 
-**dolphin-mcp-pilot** exposes **53+ tools** for projects, workflows, DAG creation, schedules, instances, resources, logs, monitoring and raw API passthrough — designed for AI agents that need to operate DolphinScheduler beyond basic read-only usage.
+**dolphin-mcp-pilot** exposes **59 tools** for projects, workflows, DAG creation, schedules, instances, resources, logs, monitoring and raw API passthrough — designed for AI agents that need to operate DolphinScheduler beyond basic read-only usage.
 
 ## 🎯 Why this project?
 
@@ -33,7 +33,7 @@ This project is designed for **real operations work**:
 
 ## 🚀 Key features
 
-- **53+ tools** covering most practical DS operations
+- **59 tools** covering most practical DS operations
 - **Two auth modes**: API Token (`X-DS-Token`) or User/Password (`X-DS-User` + `X-DS-Password`)
 - **Multi-tenant HTTP mode**: each caller can use its own credentials
 - **MCP 2.0 stateless HTTP** with automatic compatibility for MCP 1.x clients
@@ -109,11 +109,17 @@ inside your MCP client to discover the recommended workflow for each task.
 | [🚀 Deployment](docs/DEPLOYMENT.md) | Production deployment, Compose reference, verify, troubleshoot |
 | [📊 Features](docs/FEATURES.md) | Feature comparison table, tool categories |
 | [🔐 Client Config](docs/CLIENT_CONFIG.md) | MCP client setup (CodeBuddy, Claude Desktop, etc.), multi-tenant auth |
-| [📖 API Reference](docs/API.md) | All 53+ tools, parameter conventions, error handling (中文) |
+| [📖 API Reference](docs/API.md) | All 59 tools, parameter conventions, error handling (中文) |
 | [❓ FAQ](docs/FAQ.md) | Common issues and solutions (中文) |
 
 ## ✨ What's new
 
+- **Safe task content editing**: `ds_patch_task_content` previews an exact SQL/SHELL
+  diff by default, then applies it with `expected_version` and verifies the persisted content.
+- **Timeout-aware writes**: DAG/task edits share a total time budget and distinguish
+  `unknown` write outcomes from `partially_applied` recovery states.
+- **Bounded diagnostics and backfill preview**: logs support filtered context scans;
+  `ds_complement_data(dry_run=True)` returns planned dates without submitting work.
 - **MCP 2.0**: supports the stateless 2026-07-28 protocol while keeping legacy
   handshake clients and stdio configurations working.
 - **Guided troubleshooting**: `ds_list_process_instances` attaches a `next_action`

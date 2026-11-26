@@ -35,7 +35,7 @@ def test_server_supports_modern_and_legacy_clients():
     async def exercise(mode, expected_version):
         async with Client(mcp, mode=mode) as client:
             result = await client.list_tools()
-            assert len(result.tools) == 58
+            assert len(result.tools) == 59
             assert client.protocol_version == expected_version
 
     asyncio.run(exercise("auto", "2026-07-28"))

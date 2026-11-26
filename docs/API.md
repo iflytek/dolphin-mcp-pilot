@@ -1,8 +1,8 @@
 # API Reference
 
-dolphin-mcp-pilot v0.2.0 工具 API 参考文档。
+dolphin-mcp-pilot v0.4.0 工具 API 参考文档。
 
-完整的 58 个工具按功能分为 10 个类别，每个工具通过 MCP 协议调用。
+完整的 59 个工具按功能分类，每个工具通过 MCP 协议调用。
 
 ---
 
@@ -53,14 +53,15 @@ dolphin-mcp-pilot v0.2.0 工具 API 参考文档。
 - **ds_update_workflow**：更新工作流配置。
 - **ds_get_task_detail**：获取任务节点详细信息。
 
-### 5. 工作流高级操作（7 个工具）
+### 5. 工作流高级操作（8 个工具）
 
 - **ds_list_workflow_versions**：查看工作流版本历史。
 - **ds_rollback_workflow_version**：回滚到指定版本。
 - **ds_clone_workflow**：克隆工作流。
 - **ds_create_dag_workflow**：可视化创建 DAG 工作流。
-- **ds_modify_workflow_dag**：修改 DAG 结构。
+- **ds_modify_workflow_dag**：修改 DAG 结构（支持 `expected_version`、`timeout_seconds` 和写后回读）。
 - **ds_update_task_param**：更新任务参数（支持 snake_case 和 camelCase）。
+- **ds_patch_task_content**：局部替换 SQL/SHELL；默认 dry-run 返回 diff，正式写入防版本覆盖并回读验证内容。
 
 ### 6. 调度管理（6 个工具）
 
@@ -235,12 +236,14 @@ RuntimeError: 查询项目失败 (code=10001): Project 'my_project' not found
 56. ds_upload_file
 57. ds_view_resource
 58. ds_release_workflow
+59. ds_patch_task_content
 
 ---
 
 ## 版本历史
 
-- **v0.2.0**：当前版本，58 工具
+- **v0.4.0**：当前版本，59 工具
+- **v0.2.0**：58 工具
 - **v0.1.0**：初始版本，53 工具
 
 详见 [CHANGELOG.md](../CHANGELOG.md)

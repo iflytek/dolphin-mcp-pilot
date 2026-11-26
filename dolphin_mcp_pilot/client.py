@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 import mimetypes
 import os
+import time
 import urllib.parse
 import urllib.request
 import uuid
@@ -33,7 +34,7 @@ def ds_api_request(
     path: str,
     data: dict | None = None,
     json_body: dict | None = None,
-    timeout: int | None = None,
+    timeout: float | None = None,
 ) -> dict:
     """发送 HTTP 请求到 DolphinScheduler API
 
@@ -47,8 +48,9 @@ def ds_api_request(
     Returns:
         API 响应的 JSON 数据
     """
+    started_at = time.monotonic()
     url = get_ds_url()
-    sid = login()
+    sid = login(timeout=timeout)
     full_url = f"{url}{path}"
     headers = {"Cookie": f"sessionId={sid}"}
 
@@ -60,30 +62,41 @@ def ds_api_request(
         body = urllib.parse.urlencode(data).encode("utf-8")
         headers["Content-Type"] = "application/x-www-form-urlencoded"
 
-    # 超时配置：优先使用传入参数，其次环境变量，最后默认 120
+    # timeout 同时覆盖登录和 HTTP 请求，避免登录耗完后又等待一个完整周期
     if timeout is None:
-        timeout = int(os.environ.get("DS_API_TIMEOUT", "120"))
+        timeout = float(os.environ.get("DS_API_TIMEOUT", "120"))
+    remaining = max(0.001, float(timeout) - (time.monotonic() - started_at))
 
     req = urllib.request.Request(full_url, data=body, headers=headers, method=method)
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-    with opener.open(req, timeout=timeout) as resp:
+    with opener.open(req, timeout=remaining) as resp:
         raw = resp.read().decode("utf-8")
         return json.loads(raw) if raw else {}
 
 
-def ds_get(path: str) -> dict:
+def ds_get(path: str, timeout: float | None = None) -> dict:
     """GET 请求"""
-    return ds_api_request("GET", path)
+    return ds_api_request("GET", path, timeout=timeout)
 
 
-def ds_post(path: str, data: dict | None = None, json_body: dict | None = None) -> dict:
+def ds_post(
+    path: str,
+    data: dict | None = None,
+    json_body: dict | None = None,
+    timeout: float | None = None,
+) -> dict:
     """POST 请求"""
-    return ds_api_request("POST", path, data=data, json_body=json_body)
+    return ds_api_request("POST", path, data=data, json_body=json_body, timeout=timeout)
 
 
-def ds_put(path: str, data: dict | None = None, json_body: dict | None = None) -> dict:
+def ds_put(
+    path: str,
+    data: dict | None = None,
+    json_body: dict | None = None,
+    timeout: float | None = None,
+) -> dict:
     """PUT 请求"""
-    return ds_api_request("PUT", path, data=data, json_body=json_body)
+    return ds_api_request("PUT", path, data=data, json_body=json_body, timeout=timeout)
 
 
 def ds_delete(path: str) -> dict:

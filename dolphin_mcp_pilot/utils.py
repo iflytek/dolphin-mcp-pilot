@@ -32,11 +32,12 @@ def require_ok(result: dict, action: str) -> None:
         raise RuntimeError(f"{action} 失败: {result.get('msg', result)}")
 
 
-def resolve_project_code(project_name: str) -> int:
-    """根据项目名称查找 project code
+def resolve_project_code(project_name: str, timeout: float | None = None) -> int:
+    """根据项目名称查找 project code，可选限定查询等待时间（秒）
 
     Args:
         project_name: 项目名称
+        timeout: 本次项目查询的最大等待秒数
 
     Returns:
         项目 code
@@ -44,7 +45,7 @@ def resolve_project_code(project_name: str) -> int:
     Raises:
         ValueError: 如果项目不存在
     """
-    result = ds_get("/projects/list")
+    result = ds_get("/projects/list", timeout=timeout)
     require_ok(result, "获取项目列表")
     for p in result.get("data", []):
         if p["name"] == project_name:

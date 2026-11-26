@@ -11,7 +11,7 @@
 
 ## 1. Abstract
 
-dolphin-mcp-pilot is a production-ready MCP (Model Context Protocol) server for Apache DolphinScheduler. It exposes 58 tools covering project management, workflow creation, DAG manipulation, schedule configuration, instance control, backfill orchestration, resource management, log retrieval and cluster monitoring, enabling AI agents to operate DolphinScheduler through natural language.
+dolphin-mcp-pilot is a production-ready MCP (Model Context Protocol) server for Apache DolphinScheduler. It exposes 59 tools covering project management, workflow creation, DAG manipulation, schedule configuration, instance control, backfill orchestration, resource management, log retrieval and cluster monitoring, enabling AI agents to operate DolphinScheduler through natural language.
 
 The project solves a concrete operational pain point: DolphinScheduler's REST API is powerful but verbose. Common tasks like "backfill last 5 days in order" or "show me the logs of the most recent failure" require multi-step API calls, manual ID lookups and domain knowledge. By wrapping these patterns into discrete tools with agent-friendly signatures and response guidance, we reduce a 5-minute manual workflow to a 30-second agent interaction.
 
@@ -78,7 +78,7 @@ Apache DolphinScheduler is one of the most widely adopted open source data orche
 ┌─────────────────────────────────────┐
 │   dolphin-mcp-pilot MCP Server      │
 │  ┌────────────────────────────┐     │
-│  │ 58 tools (ds_*)            │     │
+│  │ 59 tools (ds_*)            │     │
 │  │ - auth layer               │     │
 │  │ - session manager          │     │
 │  │ - response formatter       │     │
@@ -93,7 +93,7 @@ Apache DolphinScheduler is one of the most widely adopted open source data orche
 
 ### 4.2 Key Components
 
-1. **Tool registry** (`tools/`): 58 tools organized into 10 categories (connectivity, projects, datasources, workflows, schedules, instances, resources, monitoring, users, raw API passthrough).
+1. **Tool registry** (`tools/`): 59 tools organized into 10 categories (connectivity, projects, datasources, workflows, schedules, instances, resources, monitoring, users, raw API passthrough).
 2. **Auth layer** (`auth.py`): Per-request authentication via `X-DS-User` / `X-DS-Password` headers or `X-DS-Token`, no persistent credentials.
 3. **Session manager**: MCP session ID tracking for multi-turn conversations.
 4. **Response formatter**: Wraps DS API JSON into agent-friendly structures, injects `next_action` hints when applicable.

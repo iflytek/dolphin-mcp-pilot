@@ -6,7 +6,7 @@ Comparison against the most prominent public DolphinScheduler MCP server: [ocean
 
 | Capability | dolphin-mcp-pilot | ocean-zhc/dolphinscheduler-mcp |
 |---|:---:|:---:|
-| **Tool count** | **53+** (manually curated) | 30+ (auto-generated from REST API) |
+| **Tool count** | **59** (manually curated) | 30+ (auto-generated from REST API) |
 | Create project | ✅ | ✅ |
 | Create SQL workflow | ✅ | ❌ (no process_definition tools) |
 | Create DAG workflow | ✅ | ❌ |
@@ -41,8 +41,9 @@ Comparison against the most prominent public DolphinScheduler MCP server: [ocean
 ### Workflow management (8 tools)
 - List / get / create (SQL) / release / run / status / delete / simple-list
 
-### Advanced workflow management (7 tools)
-- Update / clone / batch-delete / list-versions / rollback / create-dag / get-by-name
+### Advanced workflow management (8 tools)
+- Update workflow / modify DAG / update task parameters / patch SQL-SHELL content
+- Clone / list versions / rollback / create DAG
 
 ### Schedule management (6 tools)
 - List / set / online / offline / list-in-project / delete

@@ -20,9 +20,9 @@ def _parse_tool_text(response):
 class TestSmoke:
     """Basic health checks for the MCP server."""
 
-    def test_tool_count_is_58(self, mcp_client):
+    def test_tool_count_is_59(self, mcp_client):
         tools = mcp_client.tools_list()
-        assert len(tools) == 58, f"expected 58 tools, got {len(tools)}"
+        assert len(tools) == 59, f"expected 59 tools, got {len(tools)}"
 
     def test_all_tools_have_ds_prefix(self, mcp_client):
         tools = mcp_client.tools_list()

@@ -107,10 +107,10 @@ def get_credentials() -> tuple[str, str]:
     return get_ds_credentials()
 
 
-def login() -> str:
+def login(timeout: float | None = None) -> str:
     """Login with user/password and return sessionId.
 
-    Cached for 30 minutes per user.
+    Cached for 30 minutes per user. ``timeout`` optionally bounds this login.
     Do NOT call this when token auth is used; use get_current_token() instead.
     """
     user, pwd = get_credentials()
@@ -133,7 +133,8 @@ def login() -> str:
         method="POST",
     )
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-    with opener.open(req, timeout=30) as resp:
+    login_timeout = 30.0 if timeout is None else max(0.001, float(timeout))
+    with opener.open(req, timeout=login_timeout) as resp:
         result = json.loads(resp.read().decode())
 
     if result.get("code") != 0:

@@ -11,6 +11,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.0] - 2026-11-26
+
+### Added
+
+- `ds_patch_task_content` (internal feature version v2.0.20): exact SQL/SHELL
+  replacement with a read-only diff preview, unique-match validation,
+  `expected_version` optimistic concurrency control, and post-write content verification.
+- `ds_complement_data(dry_run=True)` returns planned business/schedule dates,
+  candidate payload formats, and requested parallelism without submitting work.
+- Backfill `worker_group` and `parallelism` parameters, strict input validation,
+  and explicit `planned_*` versus `actual_parallelism="not_observed"` semantics.
+- Bounded `error_only` / `grep` task-log context scans with continuation cursors.
+
+### Changed
+
+- `ds_modify_workflow_dag` and `ds_update_task_param` now support
+  `expected_version` and `timeout_seconds`. The budget covers login, project
+  resolution, reads, writes, release/schedule recovery, and verification.
+- Workflow writes are read back before success is reported. Write timeouts return
+  `unknown`; post-write recovery or verification failures return
+  `partially_applied`, and neither is blindly retried.
+- `ds_get_latest_failure_log` selects failures by end/start time rather than API
+  ordering and reuses the bounded log scanner for error context.
+
+### Verified
+
+- Ruff lint/format, Bandit, NOTICE validation, and package build all pass.
+- 39 unit/integration tests plus 6 subtests pass; wheel installation and import
+  report package and metadata version `0.4.0`.
+- Local Docker MCP smoke: 29/29 checks pass. MCP client `2.3.0` and legacy
+  client `1.29.0` both complete `tools/list` against the same MCP 2.0 server.
+
+---
+
 ## [0.3.1] - 2026-08-28
 
 ### Added
