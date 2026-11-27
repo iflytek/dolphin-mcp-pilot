@@ -15,9 +15,9 @@
 
 """dolphin-mcp-pilot - An MCP server for Apache DolphinScheduler.
 
-64+ tools covering projects, workflows (SQL & DAG), schedules,
-instances, resources (full CRUD + recursive delete), monitoring
-and raw API passthrough. Includes ds_help tool for navigation.
+59 tools covering projects, workflows (SQL & DAG), schedules,
+instances, resources (full CRUD + recursive delete), safe task content
+patching, monitoring and raw API passthrough. Includes ds_help navigation.
 
 Usage:
     # Run as MCP server
@@ -27,7 +27,7 @@ Usage:
     from dolphin_mcp_pilot import mcp, ds_list_projects
 """
 
-__version__ = "0.3.1"
+__version__ = "0.4.0"
 __author__ = "dolphin-mcp-pilot contributors"
 __license__ = "Apache-2.0"
 

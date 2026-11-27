@@ -23,7 +23,13 @@ def register_help_tools(mcp: MCPServer):
 
     @mcp.tool()
     def ds_help(category: str = "") -> dict:
-        """Interactive guide to DolphinScheduler MCP tools.
+        """Interactive guide to DolphinScheduler MCP tools (v2.0.20).
+
+        New in v2.0.20:
+        - Preview and apply exact SQL/SHELL patches with ds_patch_task_content.
+        - Protect workflow edits with expected_version and a shared timeout budget.
+        - Scan bounded log windows with error_only/grep and continuation cursors.
+        - Preview backfill dates and payloads with ds_complement_data(dry_run=True).
 
         Call without arguments to see all categories, or pass a category name
         to view tools and workflows for that category.
@@ -138,7 +144,9 @@ def register_help_tools(mcp: MCPServer):
                     "2. Create: ds_create_dag_workflow (simpler) or ds_create_workflow (full control)\n"
                     "3. Release: ds_release_workflow(online=True)\n"
                     "4. Run: ds_run_workflow(workflow_code=...)\n"
-                    "5. Modify: ds_update_workflow or ds_modify_workflow_dag (see workflow_advanced)"
+                    "5. Patch SQL/SHELL: ds_patch_task_content(dry_run=True) → expected_version + dry_run=False\n"
+                    "6. Require content_verified=True; on unknown/partially_applied read back before retrying\n"
+                    "7. Other edits: ds_update_workflow or ds_modify_workflow_dag (see workflow_advanced)"
                 ),
             },
             "workflow_advanced": {
@@ -151,7 +159,12 @@ def register_help_tools(mcp: MCPServer):
                     },
                     {
                         "name": "ds_update_task_param",
-                        "desc": "Lightweight task parameter update (no full DAG required)",
+                        "desc": "Lightweight task update with expected_version, timeout_seconds and read-back",
+                        "risk": "write",
+                    },
+                    {
+                        "name": "ds_patch_task_content",
+                        "desc": "Preview/apply an exact SQL or SHELL replacement with version protection and content verification",
                         "risk": "write",
                     },
                     {
@@ -173,8 +186,10 @@ def register_help_tools(mcp: MCPServer):
                 "workflow": (
                     "1. Add task: ds_modify_workflow_dag(operations=[{'action':'add_task',...}])\n"
                     "2. Update task param: ds_update_task_param(task_name='...', updates={...})\n"
-                    "3. Delete task: ds_modify_workflow_dag(operations=[{'action':'delete_task','task_name':'...'}])\n"
-                    "4. Clone: ds_clone_workflow(new_name='...')"
+                    "3. Patch SQL/SHELL: ds_patch_task_content(dry_run=True) → review diff → expected_version + dry_run=False\n"
+                    "4. Require persisted=True and content_verified=True; recover unknown/partially_applied by reading before any retry\n"
+                    "5. Delete task: ds_modify_workflow_dag(operations=[{'action':'delete_task','task_name':'...'}])\n"
+                    "6. Clone: ds_clone_workflow(new_name='...')"
                 ),
             },
             "instance": {
@@ -192,12 +207,12 @@ def register_help_tools(mcp: MCPServer):
                     },
                     {
                         "name": "ds_get_task_log",
-                        "desc": "Fetch task log (supports pagination)",
+                        "desc": "Fetch logs with bounded error_only/grep context scanning and continuation cursor",
                         "risk": "read-only",
                     },
                     {
                         "name": "ds_get_latest_failure_log",
-                        "desc": "One-click retrieval of failed task logs from latest instance",
+                        "desc": "Select the latest failed instance by time and extract failed-task error context",
                         "risk": "read-only",
                     },
                     {
@@ -242,7 +257,7 @@ def register_help_tools(mcp: MCPServer):
                     },
                     {
                         "name": "ds_complement_data",
-                        "desc": "Backfill by date range (default serial; supports partition_date/start_task_names/run_mode)",
+                        "desc": "Backfill with dry_run planned dates, strict validation, worker_group and requested parallelism",
                         "risk": "write",
                     },
                 ],
@@ -438,6 +453,12 @@ def register_help_tools(mcp: MCPServer):
                     "   )\n\n"
                     "[Common Scenarios]\n"
                     "- Troubleshooting: ds_get_latest_failure_log → ds_rerun_from_failure\n"
+                    "- Patch SQL/SHELL: ds_patch_task_content(task_name='sql1', old_str='old', new_str='new')  # default dry-run\n"
+                    "  Review diff, then pass expected_version=<current_version>, dry_run=False; require content_verified=True\n"
+                    "- Edit timeout recovery: unknown means the write result is uncertain; partially_applied needs read-back/recovery before any retry\n"
+                    "- Error logs: ds_get_task_log(task_instance_id=xxx, error_only=True, context_lines=20)\n"
+                    "  Continue with next_skip_line_num when truncated; no match only covers the scanned window\n"
+                    "- Backfill preview: ds_complement_data(..., dry_run=True), then inspect planned_biz_dates before submitting\n"
                     "- Backfill (full workflow, serial): ds_complement_data(start_date='2024-01-01', end_date='2024-01-31')\n"
                     "- Backfill (specific partition): ds_complement_data(partition_date='2024-01-01')  # recommended, clearer semantics\n"
                     "- Backfill (from node forward): ds_complement_data(start_task_names=['check'], task_depend_type='TASK_POST')\n"
@@ -468,7 +489,7 @@ def register_help_tools(mcp: MCPServer):
         if not category:
             # Return overview of all categories
             return {
-                "total_tools": 58,
+                "total_tools": 59,
                 "categories": {
                     k: {
                         "name": v["name"],

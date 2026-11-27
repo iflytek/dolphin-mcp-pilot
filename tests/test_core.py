@@ -79,7 +79,7 @@ class TestUtils(unittest.TestCase):
             ],
         }
         self.assertEqual(utils.resolve_project_code("target_project"), 987654321)
-        mock_ds_get.assert_called_once_with("/projects/list")
+        mock_ds_get.assert_called_once_with("/projects/list", timeout=None)
 
     @patch("dolphin_mcp_pilot.utils.ds_get")
     def test_resolve_project_code_raises_when_absent(self, mock_ds_get):
@@ -129,7 +129,7 @@ class TestAuth(unittest.TestCase):
 class TestToolRegistration(unittest.TestCase):
     """Tool registry integrity."""
 
-    EXPECTED_TOOL_COUNT = 58
+    EXPECTED_TOOL_COUNT = 59
 
     @classmethod
     def setUpClass(cls):
@@ -153,6 +153,7 @@ class TestToolRegistration(unittest.TestCase):
             "ds_list_process_instances",
             "ds_complement_data",
             "ds_update_task_param",
+            "ds_patch_task_content",
             "ds_help",
         ):
             self.assertIn(name, self.names)

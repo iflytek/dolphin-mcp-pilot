@@ -14,7 +14,7 @@
 
 Apache DolphinScheduler（小海豚调度系统）的生产级 MCP 服务器。
 
-**dolphin-mcp-pilot** 提供 **53+ 工具**，覆盖项目管理、工作流、DAG 创建、调度、实例、资源、日志、监控以及原始 API 透传 —— 专为需要超越只读操作的 AI Agent 设计。
+**dolphin-mcp-pilot** 提供 **59 工具**，覆盖项目管理、工作流、DAG 创建、调度、实例、资源、日志、监控以及原始 API 透传 —— 专为需要超越只读操作的 AI Agent 设计。
 
 ## 🎯 为什么需要这个项目？
 
@@ -32,7 +32,7 @@ Apache DolphinScheduler（小海豚调度系统）的生产级 MCP 服务器。
 
 ## 🚀 核心特性
 
-- **53+ 工具**，覆盖 DS 大部分实用操作
+- **59 工具**，覆盖 DS 大部分实用操作
 - **两种鉴权模式**：API Token（`X-DS-Token`）或用户名密码（`X-DS-User` + `X-DS-Password`）
 - **多租户 HTTP 模式**：每个调用方可使用自己的凭据
 - **MCP 2.0 无状态 HTTP**：同时自动兼容 MCP 1.x 客户端
@@ -106,11 +106,17 @@ HTTP/SSE 的 MCP 客户端：
 | [🚀 部署指南](docs/DEPLOYMENT.md) | 生产部署、Compose 参考、验证、排错 |
 | [📊 功能特性](docs/FEATURES.md) | 功能对比表、工具分类 |
 | [🔐 客户端配置](docs/CLIENT_CONFIG.md) | MCP 客户端接入（CodeBuddy、Claude Desktop 等）、多租户鉴权 |
-| [📖 API 参考](docs/API.md) | 全部 53+ 工具、参数规范、错误处理 |
+| [📖 API 参考](docs/API.md) | 全部 59 工具、参数规范、错误处理 |
 | [❓ 常见问题](docs/FAQ.md) | 常见问题与解决方案 |
 
 ## ✨ 最新动态
 
+- **安全的节点内容编辑**：`ds_patch_task_content` 默认只预览 SQL/SHELL 精确替换 diff，
+  正式写入使用 `expected_version` 防覆盖，并回读确认内容已持久化。
+- **可恢复的超时语义**：DAG/节点编辑共享总时间预算，区分写入结果 `unknown`
+  与写后恢复未完成 `partially_applied`，不盲目重复提交。
+- **有界诊断与补数预检**：日志支持错误/关键字上下文扫描；
+  `ds_complement_data(dry_run=True)` 只返回计划日期，不提交执行。
 - **MCP 2.0**：支持 2026-07-28 无状态协议，同时保持旧版握手客户端和
   stdio 配置兼容。
 - **引导式排错**：`ds_list_process_instances` 为 RUNNING/FAILURE 实例附加 `next_action`

@@ -19,7 +19,7 @@ async def exercise_v1() -> None:
     ):
         await session.initialize()
         result = await session.list_tools()
-        assert len(result.tools) == 58
+        assert len(result.tools) == 59
 
 
 async def exercise_v2() -> None:
@@ -27,7 +27,7 @@ async def exercise_v2() -> None:
 
     async with Client(SERVER_URL) as client:
         result = await client.list_tools()
-        assert len(result.tools) == 58
+        assert len(result.tools) == 59
         assert client.protocol_version == "2026-07-28"
 
 

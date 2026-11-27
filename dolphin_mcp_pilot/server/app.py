@@ -33,13 +33,13 @@ from ..tools import (
 
 # MCP 初始化时返回给客户端的使用指南
 # 遵循 MCP 协议的 initialize.result.instructions 字段
-_INSTRUCTIONS = """DolphinScheduler MCP v2.0.19 — 58 个工作流运维工具
+_INSTRUCTIONS = """DolphinScheduler MCP v2.0.20 — 59 个工作流运维工具
 
 ⚡ 新用户第一步：调用 ds_help() 查看所有分类，或 ds_help(category="quickstart") 看快速上手指南。
 
 📚 8 大分类（调用 ds_help(category="xxx") 看详情）：
   • project      项目管理（4 个工具）
-  • workflow     工作流管理（13 个工具，核心）
+  • workflow     工作流管理（14 个工具，核心）
   • instance     实例管理（13 个工具，排障核心）
   • schedule     调度管理（6 个工具）
   • resource     资源文件管理（10 个工具）
@@ -49,8 +49,12 @@ _INSTRUCTIONS = """DolphinScheduler MCP v2.0.19 — 58 个工作流运维工具
 
 🎯 常见场景速查：
   • 排障：ds_get_latest_failure_log → ds_rerun_from_failure
+  • 只看错误日志：ds_get_task_log(error_only=True, context_lines=20)；未命中用 next_skip_line_num 续扫
+  • 补数预检：ds_complement_data(dry_run=True) 只返回 planned 日期/payload，不提交执行
   • 改工作流 DAG（追加/删除/修改节点）：ds_modify_workflow_dag
   • 修改 SHELL 任务脚本：ds_modify_workflow_dag(operations=[{"action":"update_task","updates":{"script":"..."}}])
+  • 局部改 SQL/脚本：ds_patch_task_content 先 dry_run=True 看 diff，再带 expected_version 正式提交
+  • 编辑超时：unknown 先回读，不重复提交；partially_applied 先完成上线/调度/回读恢复
   • 查某工作流最近跑了几次：ds_list_process_instances(workflow_code=...)
   • 查工作流当前调度：ds_list_schedules(workflow_code=..., simplify=True)
   • 只改 cron：ds_update_schedule_cron
@@ -79,7 +83,7 @@ _INSTRUCTIONS = """DolphinScheduler MCP v2.0.19 — 58 个工作流运维工具
 mcp = MCPServer(
     "DolphinScheduler",
     instructions=_INSTRUCTIONS,
-    version="0.3.0",
+    version="0.4.0",
 )
 
 # 注册所有工具
